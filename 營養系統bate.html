@@ -308,27 +308,6 @@
         <section id="tab-profile" class="space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sm:p-8">
                 <div class="max-w-xl">
-                    <!-- 新增：帳號登入與切換卡片 -->
-                    <div class="bg-amber-50/80 border-2 border-amber-200 rounded-2xl p-5 mb-8">
-                        <div class="flex items-center justify-between pb-4 border-b border-amber-200/60">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-amber-400 border-2 border-amber-950 flex items-center justify-center font-bold text-amber-950 shadow-sm text-sm">
-                                    👤
-                                </div>
-                                <div>
-                                    <span class="text-[10px] text-amber-800 font-bold block uppercase tracking-wider">目前帳號狀態</span>
-                                    <h4 id="user-account-display" class="font-bold text-slate-800 text-sm">訪客 (Guest)</h4>
-                                </div>
-                            </div>
-                            <button id="btn-auth-action" onclick="toggleAuthModal()" class="bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all shadow-sm">
-                                🔑 登入 / 切換帳號
-                            </button>
-                        </div>
-                        <p class="text-[11px] text-amber-900/70 mt-3 leading-relaxed">
-                            💡 提示：登入帳號後可為不同使用者建立獨立的身體數據、飲食紀錄與寵物養成進度。
-                        </p>
-                    </div>
-
                     <h2 class="text-2xl font-bold text-slate-900">個人檔案與目標設定</h2>
                     <p class="text-slate-500 text-sm mt-1">使用「Mifflin-St Jeor 公式」精準計算 BMR 與 TDEE。</p>
 
@@ -416,7 +395,16 @@
                 <!-- Add Food Form -->
                 <div class="lg:col-span-5 space-y-6">
                     <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
-                        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">✍️ 自由新增飲食</h3>
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">✍️ 自由新增飲食</h3>
+                            <div>
+                                <input type="file" id="nutrition-label-input" accept="image/*" capture="environment" class="hidden" onchange="handleNutritionLabelUpload(event)">
+                                <button type="button" id="btn-scan-label" onclick="document.getElementById('nutrition-label-input').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition-all flex items-center gap-1.5">
+                                    <span>📷 AI 拍照辨識標示</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="ai-scan-status" class="hidden text-xs p-3 rounded-xl border"></div>
                         <form id="custom-food-form" onsubmit="addCustomFood(event)" class="space-y-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">食物名稱</label>
@@ -457,9 +445,15 @@
                                     <input type="number" id="food-transfat" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs">
                                 </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">鈉含量 (mg)</label>
-                                <input type="number" id="food-sodium" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">鈉含量 (mg)</label>
+                                    <input type="number" id="food-sodium" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">份數 (倍數)</label>
+                                    <input type="number" id="food-servings" step="0.1" min="0.1" value="1" required placeholder="1" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500">
+                                </div>
                             </div>
                             <div class="flex items-center gap-2 pt-1">
                                 <input type="checkbox" id="save-as-preset" class="rounded text-emerald-600">
@@ -763,92 +757,12 @@
         </div>
     </div>
 
-    <!-- ACCOUNT LOGIN / SWITCH MODAL -->
-    <div id="auth-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl border-4 border-amber-950 p-6 max-w-sm w-full shadow-[6px_6px_0px_0px_#3D2314] space-y-4">
-            <div class="text-center">
-                <div class="w-12 h-12 bg-amber-100 rounded-full border-2 border-amber-950 flex items-center justify-center mx-auto text-2xl shadow-sm mb-2">
-                    🔑
-                </div>
-                <!-- 登入、註冊與忘記密碼切換頁籤 -->
-                <div class="flex border-b border-slate-200 mb-3">
-                    <button type="button" id="tab-auth-login" onclick="switchAuthMode('login')" class="flex-1 py-1.5 text-xs font-bold border-b-2 border-amber-800 text-amber-900">
-                        🔑 登入
-                    </button>
-                    <button type="button" id="tab-auth-register" onclick="switchAuthMode('register')" class="flex-1 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600">
-                        📝 註冊帳號
-                    </button>
-                    <button type="button" id="tab-auth-forgot" onclick="switchAuthMode('forgot')" class="flex-1 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600">
-                        ❓ 忘記密碼
-                    </button>
-                </div>
-                <h3 id="auth-modal-title" class="text-base font-bold text-slate-900">帳號登入</h3>
-                <p id="auth-modal-subtitle" class="text-xs text-slate-500 mt-0.5">請輸入您的帳號與密碼</p>
-            </div>
-            <!-- 登入彈窗內的訊息顯示區塊 -->
-            <div id="auth-error-msg" class="hidden text-xs text-rose-600 font-bold bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-center animate-pulse">
-                ❌ 密碼錯誤，請重新輸入！
-            </div>
-            <form onsubmit="handleAccountLogin(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">帳號名稱</label>
-                    <input type="text" id="auth-username-input" required placeholder="例如: user123 或 小明" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500">
-                </div>
-                <!-- 註冊模式下強制填寫的 Email 或電話欄位 -->
-                <div id="auth-contact-container" class="hidden">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">電子郵件或電話 <span class="text-rose-500">*</span></label>
-                    <input type="text" id="auth-contact-input" placeholder="例如: user@example.com 或 0912345678" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500">
-                </div>
-                <div id="auth-pwd-container">
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-semibold text-slate-600">密碼</label>
-                        <button type="button" id="link-forgot-pwd" onclick="switchAuthMode('forgot')" class="text-[11px] font-bold text-amber-800 hover:underline">
-                            忘記密碼？
-                        </button>
-                    </div>
-                    <input type="password" id="auth-password-input" required placeholder="請輸入密碼" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500">
-                </div>
-                <!-- 忘記密碼模式下的驗證碼與新密碼欄位 -->
-                <div id="auth-forgot-container" class="hidden space-y-3">
-                    <div class="flex gap-2 items-end">
-                        <div class="flex-grow">
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">驗證碼</label>
-                            <input type="text" id="auth-code-input" placeholder="請輸入4位驗證碼" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <button type="button" onclick="sendResetCode()" class="bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-xs px-3 py-2 rounded-xl border border-amber-300 transition-all whitespace-nowrap">
-                            取得驗證碼
-                        </button>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">設定新密碼</label>
-                        <input type="password" id="auth-new-password-input" placeholder="請輸入新密碼" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="button" onclick="toggleAuthModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl border border-slate-300 transition-all">
-                        取消
-                    </button>
-                    <button type="submit" id="btn-auth-submit" class="flex-1 bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs font-bold py-2.5 rounded-xl border-2 border-amber-950 shadow-[2px_2px_0px_0px_#3D2314] transition-all">
-                        登入帳號
-                    </button>
-                </div>
-            </form>
-            <div id="auth-logout-option" class="pt-2 border-t border-slate-100 hidden">
-                <button type="button" onclick="handleAccountLogout()" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold py-2 rounded-xl border border-rose-200 transition-all">
-                    🚪 登出當前帳號 (切回訪客)
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- JS Application Script -->
     <script>
-        let currentUser = 'guest'; // 預設帳號為訪客
-        let authMode = 'login'; // 'login', 'register', 或 'forgot'
+        let currentUser = 'guest'; // 預設單機本機儲存
         let pendingPetKey = null;
-        let generatedResetCode = ''; // 暫存模擬發送的驗證碼
 
-        // 補上全域 state 宣告
+        // 全域 state 宣告
         let state = {
             profile: { gender: '', age: '', weight: '', height: '', activity: '', goal: '' },
             targets: { calories: 2000, protein: 120, carbs: 250, fat: 65, sugar: 50, satFat: 22, transFat: 2.2, sodium: 2300, water: 2000 },
@@ -877,16 +791,20 @@
         const ACHIEVEMENTS = [
             { id: 'first_log', title: '健康第一步', desc: '完成第一次紀錄', icon: '📝', rewardXP: 15, rewardCoins: 10 },
             { id: 'low_sodium', title: '控鈉衛士', desc: '成功控制每日鈉攝取量未超標', icon: '🧂', rewardXP: 25, rewardCoins: 15 },
-            { id: 'goal_cal', title: '熱量達人', desc: '今日總熱量成功達標', icon: '🔥', rewardXP: 20, rewardCoins: 10 },
-            { id: 'goal_protein', title: '肌力滿分', desc: '今日蛋白質成功達標', icon: '🥩', rewardXP: 20, rewardCoins: 10 },
-            { id: 'goal_carbs', title: '能量充沛', desc: '今日碳水化合物成功達標', icon: '🍚', rewardXP: 20, rewardCoins: 10 },
-            { id: 'goal_fat', title: '好油平衡', desc: '今日脂肪成功達標', icon: '🥑', rewardXP: 20, rewardCoins: 10 },
-            { id: 'goal_water', title: '水潤大使', desc: '今日水分攝取成功達標', icon: '💧', rewardXP: 20, rewardCoins: 10 },
-            { id: 'goal_sugar', title: '控糖達人', desc: '今日精緻糖控制在建議上限內', icon: '🍬', rewardXP: 20, rewardCoins: 10 },
-            { id: 'goal_satfat', title: '輕脂守護', desc: '今日飽和脂肪控制在建議上限內', icon: '🧀', rewardXP: 20, rewardCoins: 10 },
-            { id: 'goal_transfat', title: '純淨飲食', desc: '今日反式脂肪控制在建議上限內', icon: '🚫', rewardXP: 20, rewardCoins: 10 },
-            { id: 'all_goals_met', title: '營養大滿貫', desc: '今日所有營養指標與水分皆順利達標且未超標！', icon: '👑', rewardXP: 100, rewardCoins: 50 }
+            { id: 'goal_cal', title: '熱量達人', desc: '每日總熱量成功達標', icon: '🔥', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_protein', title: '肌力滿分', desc: '每日蛋白質成功達標', icon: '🥩', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_carbs', title: '能量充沛', desc: '每日碳水化合物成功達標', icon: '🍚', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_fat', title: '好油平衡', desc: '每日脂肪成功達標', icon: '🥑', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_water', title: '水潤大使', desc: '每日水分攝取成功達標', icon: '💧', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_sugar', title: '控糖達人', desc: '每日精緻糖控制在建議上限內', icon: '🍬', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_satfat', title: '輕脂守護', desc: '每日飽和脂肪控制在建議上限內', icon: '🧀', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_transfat', title: '純淨飲食', desc: '每日反式脂肪控制在建議上限內', icon: '🚫', rewardXP: 20, rewardCoins: 10 },
+            { id: 'all_goals_met', title: '營養大滿貫', desc: '每日所有營養指標與水分皆順利達標且未超標！', icon: '👑', rewardXP: 100, rewardCoins: 50 }
         ];
+
+        // 單筆飲食紀錄發放的經驗值與金幣常數（刪除時需收回）
+        const FOOD_LOG_REWARD_XP = 15;
+        const FOOD_LOG_REWARD_COINS = 10;
 
         document.addEventListener('DOMContentLoaded', () => {
             loadStateFromStorage();
@@ -902,11 +820,53 @@
             renderCustomPresets();
             renderPetSection();
             renderAchievements();
-            renderAccountStatus();
 
             // 預設開啟個人檔案分頁
             switchTab('profile');
         });
+
+        // 計算昨日各項指標並於隔天結算成就（除「健康第一步」外皆於隔天計算）
+        function evaluateYesterdayAchievements(yesterdayLogs, yesterdayWater, yesterdayTargets) {
+            if (!yesterdayLogs || yesterdayLogs.length === 0) return;
+
+            const targets = { ...state.targets, ...(yesterdayTargets || {}) };
+            const totals = yesterdayLogs.reduce((acc, l) => {
+                acc.cal += l.cal || 0;
+                acc.protein += l.protein || 0;
+                acc.carbs += l.carbs || 0;
+                acc.fat += l.fat || 0;
+                acc.sugar += l.sugar || 0;
+                acc.satFat += l.satFat || 0;
+                acc.transFat += l.transFat || 0;
+                acc.sodium += l.sodium || 0;
+                return acc;
+            }, { cal: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, satFat: 0, transFat: 0, sodium: 0 });
+
+            const calOk = totals.cal >= targets.calories * 0.8 && totals.cal <= targets.calories * 1.1;
+            const pOk = totals.protein >= targets.protein * 0.8;
+            const cOk = totals.carbs >= targets.carbs * 0.8;
+            const fOk = totals.fat >= targets.fat * 0.8;
+            const wOk = (yesterdayWater || 0) >= targets.water;
+
+            const sugarOk = totals.sugar <= targets.sugar;
+            const satFatOk = totals.satFat <= targets.satFat;
+            const transFatOk = totals.transFat <= targets.transFat;
+            const sodiumOk = totals.sodium <= targets.sodium;
+
+            if (sodiumOk) unlockAchievement('low_sodium');
+            if (calOk) unlockAchievement('goal_cal');
+            if (pOk) unlockAchievement('goal_protein');
+            if (cOk) unlockAchievement('goal_carbs');
+            if (fOk) unlockAchievement('goal_fat');
+            if (wOk) unlockAchievement('goal_water');
+            if (sugarOk && totals.sugar >= 0) unlockAchievement('goal_sugar');
+            if (satFatOk && totals.satFat >= 0) unlockAchievement('goal_satfat');
+            if (transFatOk && totals.transFat >= 0) unlockAchievement('goal_transfat');
+
+            if (calOk && pOk && cOk && fOk && wOk && sugarOk && satFatOk && transFatOk && sodiumOk) {
+                unlockAchievement('all_goals_met');
+            }
+        }
 
         // 0:00 跨日檢查與結算
         function checkDailyReset() {
@@ -917,9 +877,10 @@
                     if (state.logs.length > 0 && yesterdaySodium <= 2300) {
                         addXP(25, '昨日控鈉達標');
                         addCoins(15);
-                        unlockAchievement('low_sodium');
                         showNotification('✨ 昨日鈉攝取成功控制未超標！獎勵 +25 XP 與 15 金幣！', 'bg-amber-400 text-amber-950 font-bold');
                     }
+                    // 隔天結算昨日成就（除「健康第一步」外皆為隔天計算）
+                    evaluateYesterdayAchievements(state.logs, state.waterConsumed, state.targets);
                     state.logs = [];
                     state.waterConsumed = 0;
                 }
@@ -954,9 +915,6 @@
         }
 
         function loadStateFromStorage() {
-            const savedUser = localStorage.getItem('nutri_app_current_user');
-            if (savedUser) currentUser = savedUser;
-
             const storageKey = currentUser === 'guest' ? 'nutri_app_state' : `nutri_app_state_${currentUser}`;
             const saved = localStorage.getItem(storageKey);
             if (saved) {
@@ -968,269 +926,6 @@
                     targets: { ...state.targets, ...(loaded.targets || {}) }
                 };
             }
-        }
-
-        function renderAccountStatus() {
-            const displayEl = document.getElementById('user-account-display');
-            const logoutOpt = document.getElementById('auth-logout-option');
-            if (displayEl) {
-                displayEl.innerText = currentUser === 'guest' ? '訪客 (Guest)' : `已登入: ${currentUser}`;
-            }
-            if (logoutOpt) {
-                if (currentUser !== 'guest') {
-                    logoutOpt.classList.remove('hidden');
-                } else {
-                    logoutOpt.classList.add('hidden');
-                }
-            }
-        }
-
-        function toggleAuthModal() {
-            const modal = document.getElementById('auth-modal');
-            const errorMsg = document.getElementById('auth-error-msg');
-            if (errorMsg) errorMsg.classList.add('hidden');
-            switchAuthMode('login'); // 每次打開預設為登入模式
-            modal.classList.toggle('hidden');
-        }
-
-        function switchAuthMode(mode) {
-            authMode = mode;
-            const tabLogin = document.getElementById('tab-auth-login');
-            const tabReg = document.getElementById('tab-auth-register');
-            const tabForgot = document.getElementById('tab-auth-forgot');
-            const title = document.getElementById('auth-modal-title');
-            const subtitle = document.getElementById('auth-modal-subtitle');
-            const btnSubmit = document.getElementById('btn-auth-submit');
-            const errorMsg = document.getElementById('auth-error-msg');
-            
-            const contactContainer = document.getElementById('auth-contact-container');
-            const contactInput = document.getElementById('auth-contact-input');
-            const pwdContainer = document.getElementById('auth-pwd-container');
-            const pwdInput = document.getElementById('auth-password-input');
-            const linkForgot = document.getElementById('link-forgot-pwd');
-            const forgotContainer = document.getElementById('auth-forgot-container');
-            const codeInput = document.getElementById('auth-code-input');
-            const newPwdInput = document.getElementById('auth-new-password-input');
-
-            if (errorMsg) errorMsg.classList.add('hidden');
-
-            const activeTabClass = "flex-1 py-1.5 text-xs font-bold border-b-2 border-amber-800 text-amber-900";
-            const inactiveTabClass = "flex-1 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600";
-
-            if (mode === 'login') {
-                tabLogin.className = activeTabClass;
-                tabReg.className = inactiveTabClass;
-                tabForgot.className = inactiveTabClass;
-                if (title) title.innerText = "帳號登入";
-                if (subtitle) subtitle.innerText = "請輸入您的帳號與密碼";
-                if (btnSubmit) btnSubmit.innerText = "登入帳號";
-                contactContainer.classList.add('hidden');
-                contactInput.required = false;
-                pwdContainer.classList.remove('hidden');
-                pwdInput.required = true;
-                if (linkForgot) linkForgot.classList.remove('hidden');
-                forgotContainer.classList.add('hidden');
-                codeInput.required = false;
-                newPwdInput.required = false;
-            } else if (mode === 'register') {
-                tabReg.className = activeTabClass;
-                tabLogin.className = inactiveTabClass;
-                tabForgot.className = inactiveTabClass;
-                if (title) title.innerText = "註冊新帳號";
-                if (subtitle) subtitle.innerText = "請設定新帳號、電子郵件/電話與密碼";
-                if (btnSubmit) btnSubmit.innerText = "建立並登入";
-                contactContainer.classList.remove('hidden');
-                contactInput.required = true;
-                pwdContainer.classList.remove('hidden');
-                pwdInput.required = true;
-                if (linkForgot) linkForgot.classList.add('hidden');
-                forgotContainer.classList.add('hidden');
-                codeInput.required = false;
-                newPwdInput.required = false;
-            } else if (mode === 'forgot') {
-                tabForgot.className = activeTabClass;
-                tabLogin.className = inactiveTabClass;
-                tabReg.className = inactiveTabClass;
-                if (title) title.innerText = "重置密碼";
-                if (subtitle) subtitle.innerText = "請取得驗證碼並輸入新密碼";
-                if (btnSubmit) btnSubmit.innerText = "確認重置並登入";
-                contactContainer.classList.add('hidden');
-                contactInput.required = false;
-                pwdContainer.classList.add('hidden');
-                pwdInput.required = false;
-                forgotContainer.classList.remove('hidden');
-                codeInput.required = true;
-                newPwdInput.required = true;
-            }
-        }
-
-        function sendResetCode() {
-            const inputVal = document.getElementById('auth-username-input').value.trim();
-            const errorMsg = document.getElementById('auth-error-msg');
-            if (!inputVal) {
-                if (errorMsg) {
-                    errorMsg.innerText = "⚠️ 請先填寫「帳號名稱」再取得驗證碼！";
-                    errorMsg.classList.remove('hidden');
-                }
-                return;
-            }
-            const pwdKey = `nutri_app_pwd_${inputVal}`;
-            if (!localStorage.getItem(pwdKey)) {
-                if (errorMsg) {
-                    errorMsg.innerText = "❌ 找不到此帳號，無法發送驗證碼！";
-                    errorMsg.classList.remove('hidden');
-                }
-                return;
-            }
-            if (errorMsg) errorMsg.classList.add('hidden');
-            // 隨機產生 4 位數驗證碼並彈出提示模擬發送
-            generatedResetCode = Math.floor(1000 + Math.random() * 9000).toString();
-            showNotification(`📩 驗證碼已發送！(模擬測試驗證碼為：${generatedResetCode})`, 'bg-amber-100 text-amber-950 font-bold');
-        }
-
-        function handleAccountLogin(e) {
-            e.preventDefault();
-            const inputVal = document.getElementById('auth-username-input').value.trim();
-            const contactVal = document.getElementById('auth-contact-input').value.trim();
-            const passwordVal = document.getElementById('auth-password-input').value;
-            const codeVal = document.getElementById('auth-code-input').value.trim();
-            const newPasswordVal = document.getElementById('auth-new-password-input').value;
-            const errorMsg = document.getElementById('auth-error-msg');
-            
-            if (!inputVal) return;
-
-            const pwdKey = `nutri_app_pwd_${inputVal}`;
-            const contactKey = `nutri_app_contact_${inputVal}`;
-            const storedPwd = localStorage.getItem(pwdKey);
-
-            if (authMode === 'login') {
-                // 登入模式
-                if (!passwordVal) return;
-                if (!storedPwd) {
-                    if (errorMsg) {
-                        errorMsg.innerText = "❌ 帳號不存在，請先切換至「註冊」！";
-                        errorMsg.classList.remove('hidden');
-                    }
-                    return;
-                }
-                if (storedPwd !== passwordVal) {
-                    if (errorMsg) {
-                        errorMsg.innerText = "❌ 密碼錯誤，請重新輸入！";
-                        errorMsg.classList.remove('hidden');
-                    }
-                    return;
-                }
-            } else if (authMode === 'register') {
-                // 註冊模式
-                if (!contactVal) {
-                    if (errorMsg) {
-                        errorMsg.innerText = "⚠️ 請填寫電子郵件或電話！";
-                        errorMsg.classList.remove('hidden');
-                    }
-                    return;
-                }
-                if (!passwordVal) return;
-                if (storedPwd) {
-                    if (errorMsg) {
-                        errorMsg.innerText = "⚠️ 該帳號已被註冊，請直接切換至「登入」！";
-                        errorMsg.classList.remove('hidden');
-                    }
-                    return;
-                }
-                // 儲存新註冊帳號的密碼與聯絡資訊
-                localStorage.setItem(pwdKey, passwordVal);
-                localStorage.setItem(contactKey, contactVal);
-                showNotification(`✨ 帳號【${inputVal}】註冊成功並已自動登入！`, 'bg-emerald-50 text-emerald-800');
-            } else if (authMode === 'forgot') {
-                // 忘記密碼重置模式
-                if (!storedPwd) {
-                    if (errorMsg) {
-                        errorMsg.innerText = "❌ 找不到此帳號，請確認帳號名稱是否正確！";
-                        errorMsg.classList.remove('hidden');
-                    }
-                    return;
-                }
-                if (!generatedResetCode || codeVal !== generatedResetCode) {
-                    if (errorMsg) {
-                        errorMsg.innerText = "❌ 驗證碼錯誤或尚未取得驗證碼！";
-                        errorMsg.classList.remove('hidden');
-                    }
-                    return;
-                }
-                if (!newPasswordVal) return;
-                localStorage.setItem(pwdKey, newPasswordVal);
-                showNotification(`✨ 帳號【${inputVal}】密碼重置成功並已自動登入！`, 'bg-emerald-50 text-emerald-800');
-            }
-
-            if (errorMsg) errorMsg.classList.add('hidden');
-
-            currentUser = inputVal;
-            localStorage.setItem('nutri_app_current_user', currentUser);
-            
-            // 重置預設 state 再讀取該帳號資料
-            state = {
-                profile: { gender: '', age: '', weight: '', height: '', activity: '', goal: '' },
-                targets: { calories: 2000, protein: 120, carbs: 250, fat: 65, sugar: 50, satFat: 22, transFat: 2.2, sodium: 2300, water: 2000 },
-                logs: [],
-                weightLogs: [],
-                customPresets: [],
-                waterConsumed: 0,
-                selectedPetType: 'cat',
-                game: { level: 1, xp: 0, coins: 50, streak: 1, lastActiveDate: null, lastClickDate: null, clickCount: 0, unlockedAchievements: [] }
-            };
-
-            loadStateFromStorage();
-            calculateTargets();
-            syncProfileForm();
-            renderDashboard();
-            renderLogs();
-            renderWeightLogs();
-            renderCustomPresets();
-            renderPetSection();
-            renderAchievements();
-            renderAccountStatus();
-            
-            document.getElementById('auth-username-input').value = '';
-            document.getElementById('auth-contact-input').value = '';
-            document.getElementById('auth-password-input').value = '';
-            document.getElementById('auth-code-input').value = '';
-            document.getElementById('auth-new-password-input').value = '';
-            generatedResetCode = '';
-            document.getElementById('auth-modal').classList.add('hidden');
-            
-            if (authMode === 'login') {
-                showNotification(`🔑 已成功登入帳號：${currentUser}`, 'bg-emerald-50 text-emerald-800');
-            }
-        }
-
-        function handleAccountLogout() {
-            currentUser = 'guest';
-            localStorage.setItem('nutri_app_current_user', 'guest');
-            
-            state = {
-                profile: { gender: '', age: '', weight: '', height: '', activity: '', goal: '' },
-                targets: { calories: 2000, protein: 120, carbs: 250, fat: 65, sugar: 50, satFat: 22, transFat: 2.2, sodium: 2300, water: 2000 },
-                logs: [],
-                weightLogs: [],
-                customPresets: [],
-                waterConsumed: 0,
-                selectedPetType: 'cat',
-                game: { level: 1, xp: 0, coins: 50, streak: 1, lastActiveDate: null, lastClickDate: null, clickCount: 0, unlockedAchievements: [] }
-            };
-
-            loadStateFromStorage();
-            calculateTargets();
-            syncProfileForm();
-            renderDashboard();
-            renderLogs();
-            renderWeightLogs();
-            renderCustomPresets();
-            renderPetSection();
-            renderAchievements();
-            renderAccountStatus();
-
-            toggleAuthModal();
-            showNotification('🚪 已成功登出，切換回訪客帳號', 'bg-amber-100 text-amber-900');
         }
 
         function syncProfileForm() {
@@ -1316,31 +1011,195 @@
             const name = document.getElementById('food-name').value.trim();
             if (!name) return;
 
-            const cal = parseFloat(document.getElementById('food-cal').value) || 0;
-            const protein = parseFloat(document.getElementById('food-protein').value) || 0;
-            const carbs = parseFloat(document.getElementById('food-carbs').value) || 0;
-            const fat = parseFloat(document.getElementById('food-fat').value) || 0;
-            const sugar = parseFloat(document.getElementById('food-sugar').value) || 0;
-            const satFat = parseFloat(document.getElementById('food-satfat').value) || 0;
-            const transFat = parseFloat(document.getElementById('food-transfat').value) || 0;
-            const sodium = parseFloat(document.getElementById('food-sodium').value) || 0;
+            const servingsInput = parseFloat(document.getElementById('food-servings').value);
+            const servings = (!isNaN(servingsInput) && servingsInput > 0) ? servingsInput : 1;
 
-            const itemData = { id: Date.now(), name, cal, protein, carbs, fat, sugar, satFat, transFat, sodium };
+            const baseCal = parseFloat(document.getElementById('food-cal').value) || 0;
+            const baseProtein = parseFloat(document.getElementById('food-protein').value) || 0;
+            const baseCarbs = parseFloat(document.getElementById('food-carbs').value) || 0;
+            const baseFat = parseFloat(document.getElementById('food-fat').value) || 0;
+            const baseSugar = parseFloat(document.getElementById('food-sugar').value) || 0;
+            const baseSatFat = parseFloat(document.getElementById('food-satfat').value) || 0;
+            const baseTransFat = parseFloat(document.getElementById('food-transfat').value) || 0;
+            const baseSodium = parseFloat(document.getElementById('food-sodium').value) || 0;
+
+            const round1 = val => Math.round(val * servings * 10) / 10;
+            const cal = round1(baseCal);
+            const protein = round1(baseProtein);
+            const carbs = round1(baseCarbs);
+            const fat = round1(baseFat);
+            const sugar = round1(baseSugar);
+            const satFat = round1(baseSatFat);
+            const transFat = round1(baseTransFat);
+            const sodium = round1(baseSodium);
+
+            const displayName = servings !== 1 ? `${name} (${servings}份)` : name;
+            const itemData = {
+                id: Date.now(),
+                name: displayName,
+                cal,
+                protein,
+                carbs,
+                fat,
+                sugar,
+                satFat,
+                transFat,
+                sodium,
+                rewardXP: FOOD_LOG_REWARD_XP,
+                rewardCoins: FOOD_LOG_REWARD_COINS
+            };
             state.logs.push(itemData);
 
             if (document.getElementById('save-as-preset').checked) {
-                state.customPresets.push({ name, cal, protein, carbs, fat, sugar, satFat, transFat, sodium });
+                state.customPresets.push({ name, cal: baseCal, protein: baseProtein, carbs: baseCarbs, fat: baseFat, sugar: baseSugar, satFat: baseSatFat, transFat: baseTransFat, sodium: baseSodium });
                 renderCustomPresets();
             }
 
             document.getElementById('custom-food-form').reset();
-            addXP(15, '記錄飲食');
-            addCoins(10);
+            document.getElementById('food-servings').value = '1';
+            addXP(FOOD_LOG_REWARD_XP, '記錄飲食');
+            addCoins(FOOD_LOG_REWARD_COINS);
             unlockAchievement('first_log');
             saveStateToStorage();
             renderDashboard();
             renderLogs();
-            showNotification(`🍽️ 已新增飲食紀錄：${name} (+15 XP, +10 金幣)`, 'bg-emerald-50 text-emerald-800');
+            showNotification(`🍽️ 已新增飲食紀錄：${displayName} (+${FOOD_LOG_REWARD_XP} XP, +${FOOD_LOG_REWARD_COINS} 金幣)`, 'bg-emerald-50 text-emerald-800');
+        }
+
+        // --- AI 拍照辨識營養標示功能 ---
+        async function handleNutritionLabelUpload(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('ai-scan-status');
+            const scanBtn = document.getElementById('btn-scan-label');
+
+            if (statusEl) {
+                statusEl.className = 'text-xs p-3 rounded-xl border bg-indigo-50 text-indigo-800 border-indigo-200 flex items-center gap-2 font-medium';
+                statusEl.innerHTML = `<span class="animate-spin inline-block">⏳</span> <span>AI 正在分析營養標示照片，請稍候...</span>`;
+                statusEl.classList.remove('hidden');
+            }
+            if (scanBtn) {
+                scanBtn.disabled = true;
+                scanBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
+            try {
+                const base64Data = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+
+                const mimeType = file.type || 'image/jpeg';
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const prompt = "請仔細辨識這張食品包裝或營養標示圖片中的營養成分數據。請優先讀取『每份』的數值；若標示僅提供『每100公克/毫升』，則讀取每100公克/毫升的數值。請同時辨識包裝或營養標示上的『份數』（例如『本包裝含2份』或『共3份』則回傳 2 或 3；若未標示份數或僅標示1份，請回傳 1）。若圖片中有產品名稱或品名，請一併辨識並填入 name（若無則填寫 '辨識食品'）。所有營養素數值請回傳純數字（若標示為 0 或未標示請回傳 0）。";
+
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inlineData: {
+                                        mimeType: mimeType,
+                                        data: base64Data
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                name: { type: "STRING", description: "食品名稱或品牌品名" },
+                                servings: { type: "NUMBER", description: "包裝或標示上的份數（若未標示則為 1）" },
+                                calories: { type: "NUMBER", description: "熱量 (kcal/大卡)" },
+                                protein: { type: "NUMBER", description: "蛋白質 (g)" },
+                                carbs: { type: "NUMBER", description: "碳水化合物 (g)" },
+                                fat: { type: "NUMBER", description: "脂肪/總脂肪 (g)" },
+                                sugar: { type: "NUMBER", description: "糖/精緻糖 (g)" },
+                                satFat: { type: "NUMBER", description: "飽和脂肪 (g)" },
+                                transFat: { type: "NUMBER", description: "反式脂肪 (g)" },
+                                sodium: { type: "NUMBER", description: "鈉含量 (mg/毫克)" }
+                            },
+                            required: ["name", "servings", "calories", "protein", "carbs", "fat", "sugar", "satFat", "transFat", "sodium"]
+                        }
+                    }
+                };
+
+                // 指數退避重試機制
+                let response;
+                let delay = 1000;
+                for (let attempt = 0; attempt < 4; attempt++) {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) break;
+                    if (attempt < 3) {
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                    }
+                }
+
+                if (!response || !response.ok) {
+                    throw new Error('AI 辨識服務暫時無法回應');
+                }
+
+                const result = await response.json();
+                const textContent = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!textContent) {
+                    throw new Error('無法從圖片解析出營養數據');
+                }
+
+                const parsed = JSON.parse(textContent);
+
+                // 將辨識結果自動填入表單欄位
+                if (parsed.name && parsed.name !== '辨識食品') {
+                    document.getElementById('food-name').value = parsed.name;
+                } else if (!document.getElementById('food-name').value.trim()) {
+                    document.getElementById('food-name').value = 'AI 辨識食品';
+                }
+                const servingsInput = document.getElementById('food-servings');
+                if (servingsInput) {
+                    const detectedServings = parseFloat(parsed.servings);
+                    servingsInput.value = (!isNaN(detectedServings) && detectedServings > 0) ? detectedServings : 1;
+                }
+                document.getElementById('food-cal').value = parsed.calories ?? 0;
+                document.getElementById('food-protein').value = parsed.protein ?? 0;
+                document.getElementById('food-carbs').value = parsed.carbs ?? 0;
+                document.getElementById('food-fat').value = parsed.fat ?? 0;
+                document.getElementById('food-sugar').value = parsed.sugar ?? 0;
+                document.getElementById('food-satfat').value = parsed.satFat ?? 0;
+                document.getElementById('food-transfat').value = parsed.transFat ?? 0;
+                document.getElementById('food-sodium').value = parsed.sodium ?? 0;
+
+                if (statusEl) {
+                    statusEl.className = 'text-xs p-3 rounded-xl border bg-emerald-50 text-emerald-800 border-emerald-200 font-medium';
+                    statusEl.innerHTML = `✅ AI 辨識完成！已自動將數值填入下方表單，請確認無誤後點擊「＋ 加入今日紀錄」。`;
+                }
+                showNotification('✨ AI 營養標示辨識成功！已自動填入各項數值。', 'bg-emerald-50 text-emerald-800');
+            } catch (err) {
+                if (statusEl) {
+                    statusEl.className = 'text-xs p-3 rounded-xl border bg-rose-50 text-rose-800 border-rose-200 font-medium';
+                    statusEl.innerHTML = `⚠️ 辨識失敗，請確認照片中的營養標示清晰可見後再試一次。`;
+                }
+                showNotification('⚠️ AI 營養標示辨識失敗，請重新拍攝清晰照片或手動輸入。', 'bg-rose-50 text-rose-800');
+            } finally {
+                event.target.value = '';
+                if (scanBtn) {
+                    scanBtn.disabled = false;
+                    scanBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
         }
 
         function addWater(amount) {
@@ -1423,8 +1282,30 @@
             renderPetSection();
         }
 
+        // 收回經驗值（支援跨等級降級處理，最低為 Lv.1 / 0 XP）
+        function deductXP(amount) {
+            if (!amount || amount <= 0) return;
+            state.game.xp -= amount;
+            while (state.game.xp < 0) {
+                if (state.game.level > 1) {
+                    state.game.level -= 1;
+                    state.game.xp += state.game.level * 100;
+                } else {
+                    state.game.xp = 0;
+                    break;
+                }
+            }
+            renderPetSection();
+        }
+
         function addCoins(amount) {
             state.game.coins += amount;
+        }
+
+        // 收回金幣（最低為 0）
+        function deductCoins(amount) {
+            if (!amount || amount <= 0) return;
+            state.game.coins = Math.max(0, state.game.coins - amount);
         }
 
         function unlockAchievement(id) {
@@ -1440,36 +1321,6 @@
                     renderPetSection();
                     showNotification(`🏆 恭喜解鎖成就【${ach.title}】！獲得 +${ach.rewardXP} XP 與 🪙 +${ach.rewardCoins} 金幣！`, 'bg-amber-400 text-amber-950 font-bold');
                 }
-            }
-        }
-
-        function checkAllGoalsAchievement(totals) {
-            if (state.logs.length === 0) return;
-            // 檢查是否熱量、蛋白質、碳水、脂肪、水分均達到至少 80%
-            const calOk = totals.cal >= state.targets.calories * 0.8 && totals.cal <= state.targets.calories * 1.1;
-            const pOk = totals.protein >= state.targets.protein * 0.8;
-            const cOk = totals.carbs >= state.targets.carbs * 0.8;
-            const fOk = totals.fat >= state.targets.fat * 0.8;
-            const wOk = state.waterConsumed >= state.targets.water;
-
-            // 檢查限制型成分是否皆未超過上限
-            const sugarOk = totals.sugar <= state.targets.sugar;
-            const satFatOk = totals.satFat <= state.targets.satFat;
-            const transFatOk = totals.transFat <= state.targets.transFat;
-            const sodiumOk = totals.sodium <= state.targets.sodium;
-
-            // 各個項目單獨解鎖判定
-            if (calOk) unlockAchievement('goal_cal');
-            if (pOk) unlockAchievement('goal_protein');
-            if (cOk) unlockAchievement('goal_carbs');
-            if (fOk) unlockAchievement('goal_fat');
-            if (wOk) unlockAchievement('goal_water');
-            if (sugarOk && totals.sugar >= 0) unlockAchievement('goal_sugar');
-            if (satFatOk && totals.satFat >= 0) unlockAchievement('goal_satfat');
-            if (transFatOk && totals.transFat >= 0) unlockAchievement('goal_transfat');
-
-            if (calOk && pOk && cOk && fOk && wOk && sugarOk && satFatOk && transFatOk && sodiumOk) {
-                unlockAchievement('all_goals_met');
             }
         }
 
@@ -1586,9 +1437,6 @@
             document.getElementById('val-target-water').innerText = state.targets.water;
             updateProgressBar('bar-water', 'pct-water', 'msg-water', state.waterConsumed, state.targets.water, 'ml');
 
-            // 自動檢測是否達成所有項目解鎖成就
-            checkAllGoalsAchievement(totals);
-
             document.getElementById('xp-bar').style.width = `${Math.min(100, (state.game.xp / (state.game.level * 100)) * 100)}%`;
             document.getElementById('xp-text').innerText = `經驗值 XP: ${state.game.xp} / ${state.game.level * 100}`;
             document.getElementById('mascot-click-count').innerText = `今日互動: ${state.game.clickCount}/5`;
@@ -1628,11 +1476,21 @@
         }
 
         function deleteFoodLog(id) {
+            const targetLog = state.logs.find(l => l.id === id);
+            if (!targetLog) return;
+
+            const xpToDeduct = targetLog.rewardXP ?? FOOD_LOG_REWARD_XP;
+            const coinsToDeduct = targetLog.rewardCoins ?? FOOD_LOG_REWARD_COINS;
+
             state.logs = state.logs.filter(l => l.id !== id);
+            deductXP(xpToDeduct);
+            deductCoins(coinsToDeduct);
+
             saveStateToStorage();
             renderDashboard();
             renderLogs();
-            showNotification('🗑️ 已成功刪除該筆飲食紀錄！', 'bg-rose-50 text-rose-800');
+            renderPetSection();
+            showNotification(`🗑️ 已刪除飲食紀錄並收回 -${xpToDeduct} XP 與 🪙 -${coinsToDeduct} 金幣！`, 'bg-rose-50 text-rose-800');
         }
 
         function openEditFoodModal(id) {
@@ -1663,7 +1521,9 @@
             const index = state.logs.findIndex(l => l.id === id);
             if (index === -1) return;
 
+            const existingItem = state.logs[index];
             state.logs[index] = {
+                ...existingItem,
                 id,
                 name: document.getElementById('edit-food-name').value,
                 cal: parseFloat(document.getElementById('edit-food-cal').value) || 0,
@@ -1789,7 +1649,7 @@
             container.innerHTML = state.customPresets.map(p => `
                 <div class="bg-amber-50 p-2 rounded-xl flex justify-between items-center text-xs">
                     <span>${p.name}</span>
-                    <button onclick="state.logs.push({...${JSON.stringify(p).replace(/"/g, '&quot;')}, id: Date.now()}); renderLogs(); renderDashboard();" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded">＋新增</button>
+                    <button onclick="state.logs.push({...${JSON.stringify(p).replace(/"/g, '&quot;')}, id: Date.now(), rewardXP: ${FOOD_LOG_REWARD_XP}, rewardCoins: ${FOOD_LOG_REWARD_COINS}}); addXP(${FOOD_LOG_REWARD_XP}); addCoins(${FOOD_LOG_REWARD_COINS}); unlockAchievement('first_log'); saveStateToStorage(); renderLogs(); renderDashboard();" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded">＋新增</button>
                 </div>
             `).join('');
         }
