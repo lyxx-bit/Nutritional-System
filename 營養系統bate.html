@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日營養攝取量評估與記錄系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Pixel Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        .font-pixel {
+            font-family: 'Press Start 2P', cursive, monospace;
+        }
+        /* Pixel Border Style */
+        .pixel-box {
+            box-shadow: 4px 4px 0px 0px #3D2314;
+            border: 4px solid #3D2314;
+        }
+        .pixel-btn {
+            box-shadow: 3px 3px 0px 0px #3D2314;
+            border: 2px solid #3D2314;
+            transition: all 0.1s ease;
+        }
+        .pixel-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px 0px #3D2314;
+        }
+        /* Cozy Room Background */
+        .bg-cozy-room {
+            background: linear-gradient(180deg, #2B263F 0%, #4A3B52 40%, #8C6247 70%, #5C3A21 100%);
+        }
+        .pixel-art {
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body class="bg-amber-50/40 text-slate-800 min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="bg-amber-800 text-amber-50 shadow-md sticky top-0 z-50 border-b-4 border-amber-950">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🥗</span>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold leading-tight">每日營養攝取量評估系統</h1>
+                    <p class="text-[11px] text-amber-200">科學化計算與溫馨像素寵物陪伴</p>
+                </div>
+            </div>
+            <!-- Navigation Tabs -->
+            <nav class="flex flex-wrap gap-1 bg-amber-950/60 p-1 rounded-xl text-xs sm:text-sm font-medium">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3 py-1.5 rounded-lg transition-all text-amber-100 hover:bg-amber-800">今日總覽</button>
+                <button onclick="switchTab('tracker')" id="btn-tracker" class="px-3 py-1.5 rounded-lg transition-all text-amber-100 hover:bg-amber-800">飲食記錄</button>
+                <button onclick="switchTab('pet')" id="btn-pet" class="px-3 py-1.5 rounded-lg transition-all text-amber-100 hover:bg-amber-800 flex items-center gap-1">🐾 寵物小屋</button>
+                <button onclick="switchTab('achievements')" id="btn-achievements" class="px-3 py-1.5 rounded-lg transition-all text-amber-100 hover:bg-amber-800">🏆 成就勳章</button>
+                <button onclick="switchTab('guide')" id="btn-guide" class="px-3 py-1.5 rounded-lg transition-all text-amber-100 hover:bg-amber-800">營養指南</button>
+                <button onclick="switchTab('profile')" id="btn-profile" class="px-3 py-1.5 rounded-lg transition-all bg-amber-100 text-amber-900 shadow-sm">個人檔案</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
+
+        <!-- Notification Banner -->
+        <div id="notification" class="hidden mb-6 p-4 rounded-xl text-sm font-medium transition-all shadow-sm"></div>
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="hidden space-y-6">
+            <!-- Gamified Header / Pet Status Banner -->
+            <div class="bg-cozy-room rounded-2xl p-6 text-white shadow-md relative overflow-hidden border-4 border-amber-950">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                    <!-- Pet Avatar & Level Status -->
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <div id="mascot-avatar-box" class="relative group cursor-pointer" onclick="clickMascot()">
+                            <div class="w-24 h-24 bg-amber-100/90 rounded-none flex items-center justify-center border-4 border-amber-950 shadow-[4px_4px_0px_0px_#3D2314] transform hover:scale-105 transition-transform overflow-hidden p-1">
+                                <div id="mascot-emoji" class="w-full h-full flex items-center justify-center">
+                                    <!-- Dynamic SVG Pixel Pet -->
+                                </div>
+                            </div>
+                            <div id="mascot-speech-bubble" class="absolute left-28 top-0 bg-amber-50 text-amber-950 text-xs font-bold px-3 py-2 rounded-xl shadow-lg border-2 border-amber-950 whitespace-nowrap animate-bounce flex items-center gap-2">
+                                <span>點我一下有驚喜喔！✨</span>
+                                <button onclick="event.stopPropagation(); closeSpeechBubble()" class="text-amber-900/60 hover:text-amber-950 text-xs font-black px-1 rounded hover:bg-amber-200/50 transition-colors">×</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span id="user-level-badge" class="bg-amber-400 text-amber-950 border border-amber-950 text-xs font-pixel px-2.5 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Lv.1 暖心花貓</span>
+                                <span id="streak-badge" class="bg-rose-600/90 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">🔥 連續 1 天</span>
+                                <span id="coin-badge" class="bg-amber-300 text-amber-950 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">🪙 50 金幣</span>
+                            </div>
+                            <h2 id="mascot-greeting" class="text-xl font-bold mt-1 text-amber-100">主人，記得記錄飲食賺金幣餵我喔！</h2>
+                            <div class="w-48 sm:w-64 bg-black/40 h-3 rounded-full mt-2 overflow-hidden border border-amber-200/30">
+                                <div id="xp-bar" class="bg-amber-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-1 text-[11px] text-amber-200">
+                                <span id="xp-text">經驗值 XP: 0 / 100</span>
+                                <span id="mascot-click-count" class="bg-black/30 px-2 py-0.5 rounded-full font-semibold">今日互動: 0/5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Targets Quick Stats -->
+                    <div class="flex gap-3 w-full md:w-auto justify-end">
+                        <div class="bg-amber-950/40 backdrop-blur-md p-3.5 rounded-xl text-center border border-amber-300/30 flex-1 md:w-32">
+                            <span class="text-xs text-amber-200 block">建議總熱量</span>
+                            <span id="stat-target-cal" class="text-2xl font-black text-white">2000</span>
+                            <span class="text-[10px] text-amber-300">kcal</span>
+                        </div>
+                        <div class="bg-amber-950/40 backdrop-blur-md p-3.5 rounded-xl text-center border border-amber-300/30 flex-1 md:w-32">
+                            <span class="text-xs text-amber-200 block">今日已攝取</span>
+                            <span id="stat-consumed-cal" class="text-2xl font-black text-amber-300">0</span>
+                            <span class="text-[10px] text-amber-300">kcal</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nutrient Progress Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Calories Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">🔥 熱量 (Calories)</h3>
+                            <span id="pct-cal" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-slate-500">
+                            <span>已攝取: <strong id="val-consumed-cal" class="text-slate-800">0</strong> kcal</span>
+                            <span>目標: <strong id="val-target-cal" class="text-slate-800">2000</strong> kcal</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                            <div id="bar-cal" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="msg-cal" class="text-xs text-slate-400 mt-4 italic">尚未記錄食物</p>
+                </div>
+
+                <!-- Protein Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">🥩 蛋白質 (Protein)</h3>
+                            <span id="pct-protein" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-slate-500">
+                            <span>已攝取: <strong id="val-consumed-protein" class="text-slate-800">0</strong> g</span>
+                            <span>目標: <strong id="val-target-protein" class="text-slate-800">120</strong> g</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                            <div id="bar-protein" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="msg-protein" class="text-xs text-slate-400 mt-4 italic">助於肌肉修復與生長</p>
+                </div>
+
+                <!-- Carbs Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">🍚 碳水化合物 (Carbs)</h3>
+                            <span id="pct-carbs" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-slate-500">
+                            <span>已攝取: <strong id="val-consumed-carbs" class="text-slate-800">0</strong> g</span>
+                            <span>目標: <strong id="val-target-carbs" class="text-slate-800">250</strong> g</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                            <div id="bar-carbs" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="msg-carbs" class="text-xs text-slate-400 mt-4 italic">提供身體主要能量</p>
+                </div>
+
+                <!-- Fat Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">🥑 脂肪 (Fats)</h3>
+                            <span id="pct-fat" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-slate-500">
+                            <span>已攝取: <strong id="val-consumed-fat" class="text-slate-800">0</strong> g</span>
+                            <span>目標: <strong id="val-target-fat" class="text-slate-800">65</strong> g</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                            <div id="bar-fat" class="bg-purple-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="msg-fat" class="text-xs text-slate-400 mt-4 italic">調節身體生理機能</p>
+                </div>
+
+                <!-- Sugar Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">🍬 精緻糖 (Sugars)</h3>
+                            <span id="pct-sugar" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-slate-500">
+                            <span>已攝取: <strong id="val-consumed-sugar" class="text-slate-800">0</strong> g</span>
+                            <span>建議上限: <strong id="val-target-sugar" class="text-slate-800">50</strong> g</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                            <div id="bar-sugar" class="bg-pink-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="msg-sugar" class="text-xs text-slate-400 mt-4 italic">建議不超過總熱量的 10%</p>
+                </div>
+
+                <!-- Saturated Fat Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">🧀 飽和脂肪 (Saturated Fat)</h3>
+                            <span id="pct-satfat" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-slate-500">
+                            <span>已攝取: <strong id="val-consumed-satfat" class="text-slate-800">0</strong> g</span>
+                            <span>建議上限: <strong id="val-target-satfat" class="text-slate-800">22</strong> g</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                            <div id="bar-satfat" class="bg-orange-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="msg-satfat" class="text-xs text-slate-400 mt-4 italic">建議不超過總熱量的 10%</p>
+                </div>
+
+                <!-- Trans Fat Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">🚫 反式脂肪 (Trans Fat)</h3>
+                            <span id="pct-transfat" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-slate-500">
+                            <span>已攝取: <strong id="val-consumed-transfat" class="text-slate-800">0</strong> g</span>
+                            <span>建議上限: <strong id="val-target-transfat" class="text-slate-800">2.2</strong> g</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                            <div id="bar-transfat" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="msg-transfat" class="text-xs text-slate-400 mt-4 italic">儘量避免攝取（建議小於總熱量1%）</p>
+                </div>
+
+                <!-- Sodium Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">🧂 鈉含量 (Sodium)</h3>
+                            <span id="pct-sodium" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-slate-500">
+                            <span>已攝取: <strong id="val-consumed-sodium" class="text-slate-800">0</strong> mg</span>
+                            <span>上限: <strong id="val-target-sodium" class="text-slate-800">2300</strong> mg</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                            <div id="bar-sodium" class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="msg-sodium" class="text-xs text-slate-400 mt-4 italic">每日建議上限 2,300 mg（於午夜 0:00 自動結算獎勵）</p>
+                </div>
+
+                <!-- Water Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">💧 水分 (Water)</h3>
+                            <span id="pct-water" class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">0%</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-2 text-slate-500">
+                            <span class="flex items-center gap-1.5">
+                                已攝取: <strong id="val-consumed-water" class="text-slate-800">0</strong> ml
+                                <button onclick="openEditWaterModal()" title="直接修改今日總飲水量" class="text-[11px] bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-700 px-1.5 py-0.5 rounded font-bold transition-all">✏️ 修改</button>
+                            </span>
+                            <span>建議: <strong id="val-target-water" class="text-slate-800">2000</strong> ml</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                            <div id="bar-water" class="bg-sky-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <!-- Custom Water Input -->
+                    <div class="mt-4 space-y-2">
+                        <div class="flex gap-2">
+                            <input type="number" id="water-custom-input" placeholder="自由輸入 (ml)" min="1" step="10" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                            <button onclick="addCustomWater()" class="bg-sky-600 hover:bg-sky-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap">紀錄水分</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="addWater(250)" class="flex-1 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs py-1.5 rounded-lg font-medium transition-all">+ 250ml</button>
+                            <button onclick="addWater(500)" class="flex-1 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs py-1.5 rounded-lg font-medium transition-all">+ 500ml</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Intelligent Recommendations Box -->
+            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6">
+                <h3 class="font-bold text-emerald-900 flex items-center gap-2 mb-2">💡 營養師AI建議評語</h3>
+                <div id="ai-feedback" class="text-sm text-emerald-800 leading-relaxed">
+                    請至「個人檔案」填寫您的資料，系統將為您生成專屬的每日營養充足度評估報告。
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: PROFILE & GOALS -->
+        <section id="tab-profile" class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sm:p-8">
+                <div class="max-w-xl">
+                    <h2 class="text-2xl font-bold text-slate-900">個人檔案與目標設定</h2>
+                    <p class="text-slate-500 text-sm mt-1">使用「Mifflin-St Jeor 公式」精準計算 BMR 與 TDEE。</p>
+
+                    <form id="profile-form" onsubmit="saveProfile(event)" class="mt-6 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">性別</label>
+                                <select id="gender" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+                                    <option value="" disabled selected>請選擇</option>
+                                    <option value="male">男性</option>
+                                    <option value="female">女性</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">年齡 (歲)</label>
+                                <input type="number" id="age" required min="10" max="120" placeholder="請輸入年齡" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">體重 (kg)</label>
+                                <input type="number" id="weight" step="0.1" required min="30" max="300" placeholder="請輸入體重" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">身高 (cm)</label>
+                                <input type="number" id="height" step="0.1" required min="100" max="250" placeholder="請輸入身高" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">日常活動強度</label>
+                            <select id="activity" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+                                <option value="" disabled selected>請選擇日常活動強度</option>
+                                <option value="1.2">久坐 / 極少運動</option>
+                                <option value="1.375">輕度運動 (每週 1-3 天)</option>
+                                <option value="1.55">中度運動 (每週 3-5 天)</option>
+                                <option value="1.725">高度運動 (每週 6-7 天)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">目標</label>
+                            <select id="goal" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+                                <option value="" disabled selected>請選擇目標</option>
+                                <option value="maintain">維持體態</option>
+                                <option value="lose">減脂瘦身</option>
+                                <option value="gain">增肌</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl transition-all shadow-sm">
+                            儲存並計算目標
+                        </button>
+                    </form>
+
+                    <!-- 新增：每日體重追蹤區塊 -->
+                    <div class="mt-8 pt-6 border-t border-slate-200 space-y-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">⚖️ 每日體重追蹤</h3>
+                            <p class="text-slate-500 text-xs mt-0.5">選擇年月日並記錄體重變化，追蹤健康與體態管理進度。</p>
+                        </div>
+                        <form onsubmit="addWeightLog(event)" class="flex flex-col sm:flex-row gap-2">
+                            <input type="date" id="daily-weight-date" required class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <input type="number" id="daily-weight-input" step="0.1" min="20" max="300" required placeholder="輸入體重 (kg)" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold text-xs px-4 py-2 rounded-xl border-2 border-amber-950 shadow-[2px_2px_0px_0px_#3D2314] transition-all whitespace-nowrap">
+                                ＋ 記錄體重
+                            </button>
+                        </form>
+                        <div class="bg-slate-50 rounded-xl border border-slate-200/70 p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-slate-700">📋 體重歷史紀錄</span>
+                                <span id="weight-diff-badge" class="text-[11px] font-semibold text-slate-500">尚無比較數據</span>
+                            </div>
+                            <div id="weight-logs-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: FOOD TRACKER -->
+        <section id="tab-tracker" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Add Food Form -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">✍️ 自由新增飲食</h3>
+                        </div>
+                        <form id="custom-food-form" onsubmit="addCustomFood(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">食物名稱</label>
+                                <input type="text" id="food-name" required placeholder="例如: 煎雞胸肉便當" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">熱量 (kcal)</label>
+                                    <input type="number" id="food-cal" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">蛋白質 (g)</label>
+                                    <input type="number" id="food-protein" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">碳水化合物 (g)</label>
+                                    <input type="number" id="food-carbs" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">脂肪 (g)</label>
+                                    <input type="number" id="food-fat" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                                </div>
+                            </div>
+                            <!-- 新增：糖、飽和脂肪、反式脂肪 -->
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">糖 (g)</label>
+                                    <input type="number" id="food-sugar" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">飽和脂肪 (g)</label>
+                                    <input type="number" id="food-satfat" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">反式脂肪 (g)</label>
+                                    <input type="number" id="food-transfat" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">鈉含量 (mg)</label>
+                                    <input type="number" id="food-sodium" step="0.1" min="0" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">份數 (倍數)</label>
+                                    <input type="number" id="food-servings" step="0.1" min="0.1" value="1" required placeholder="1" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 pt-1">
+                                <input type="checkbox" id="save-as-preset" class="rounded text-emerald-600">
+                                <label for="save-as-preset" class="text-xs text-slate-600">同時將此食物儲存至『常用食物庫』</label>
+                            </div>
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-sm">
+                                ＋ 加入今日紀錄
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Custom Presets Library -->
+                    <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-3">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">⭐ 我的常用食物庫</h3>
+                        <div id="custom-presets-list" class="space-y-2"></div>
+                    </div>
+
+                    <!-- 新增：連鎖店與泡麵快捷鍵 -->
+                    <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">⚡ 連鎖店、泡麵 & 小吃店快捷鍵</h3>
+                            <span class="text-[10px] text-slate-400">點擊「＋新增」直接紀錄</span>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                            <button type="button" id="quick-tab-chain" onclick="switchQuickPresetTab('chain')" class="flex-1 py-1.5 rounded-lg bg-white text-emerald-700 shadow-sm transition-all">🏪 連鎖店</button>
+                            <button type="button" id="quick-tab-noodle" onclick="switchQuickPresetTab('noodle')" class="flex-1 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all">🍜 泡麵</button>
+                            <button type="button" id="quick-tab-snack" onclick="switchQuickPresetTab('snack')" class="flex-1 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all">🏮 小吃店</button>
+                        </div>
+                        <div id="quick-chain-subtabs" class="flex flex-wrap gap-1.5"></div>
+                        <div id="quick-presets-list" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+
+                <!-- Food Log Table Column -->
+                <div class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-lg">📋 今日飲食紀錄</h3>
+                            <p class="text-xs text-slate-400">已記錄 <span id="log-count">0</span> 項飲食</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-400 block">今日累計</span>
+                            <span id="log-total-cal" class="text-xl font-black text-emerald-600">0 kcal</span>
+                        </div>
+                    </div>
+                    <div id="log-list-container" class="space-y-2 max-h-[500px] overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: PET & FEED SHOP -->
+        <section id="tab-pet" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-lg mb-3">👾 選擇像素夥伴</h3>
+                <div id="pet-selector-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-3"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Pet Room -->
+                <div class="lg:col-span-5 bg-cozy-room rounded-none p-6 border-4 border-amber-950 shadow-[6px_6px_0px_0px_#3D2314] flex flex-col items-center justify-between text-center min-h-[380px]">
+                    <div class="w-full flex justify-between items-center text-xs font-bold text-amber-100">
+                        <span id="pet-room-streak">🔥 打卡連續 <strong class="text-amber-300">1</strong> 天</span>
+                        <span id="pet-room-coins" class="bg-amber-400 text-amber-950 px-3 py-1 border-2 border-amber-950 font-pixel text-[10px]">🪙 50 金幣</span>
+                    </div>
+
+                    <div class="my-6 relative">
+                        <div class="w-40 h-40 bg-amber-100/90 rounded-none border-4 border-amber-950 flex items-center justify-center shadow-[4px_4px_0px_0px_#3D2314] cursor-pointer p-2" onclick="clickMascot()">
+                            <div id="pet-room-emoji" class="w-full h-full flex items-center justify-center"></div>
+                        </div>
+                        <div id="pet-room-level-tag" class="mt-4 bg-amber-400 text-amber-950 border-2 border-amber-950 text-xs font-pixel px-3 py-1 inline-block">
+                            Lv.1 暖心花貓
+                        </div>
+                    </div>
+
+                    <div class="w-full bg-amber-50/95 p-4 border-2 border-amber-950 shadow-[2px_2px_0px_0px_#3D2314]">
+                        <h3 class="font-bold text-amber-950 text-xs font-pixel mb-1">🐾 寵物心情</h3>
+                        <p id="pet-mood-text" class="text-xs text-amber-900">「今天也要補足滿滿營養喔！」</p>
+                    </div>
+                </div>
+
+                <!-- Feed Shop -->
+                <div class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-800 text-lg">🍖 飼料商店與餵食</h3>
+                    <div id="feed-shop-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: ACHIEVEMENTS -->
+        <section id="tab-achievements" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h3 class="font-bold text-slate-800 text-lg mb-4">🎖️ 勳章收集冊</h3>
+                <div id="achievements-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- TAB 6: GUIDE -->
+        <section id="tab-guide" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">📖 每日營養與健康攝取指南</h2>
+                    <p class="text-xs text-slate-500 mt-1">
+                        參考衛福部國民健康署及世界衛生組織（WHO）建議標準，了解各項營養素功能與控制目標。
+                    </p>
+                </div>
+
+                <!-- 營養指標詳細列表格 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- 熱量 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                            <span>🔥</span> 熱量 (Calories)
+                        </div>
+                        <p class="text-xs text-emerald-700 font-semibold">建議標準：依 BMR 與 TDEE 客製化計算</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            維持身體日常機能與運動所需總能量。想減脂者每日可減少約 500 kcal，增肌者可增加 300 kcal。
+                        </p>
+                    </div>
+
+                    <!-- 蛋白質 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                            <span>🥩</span> 蛋白質 (Protein)
+                        </div>
+                        <p class="text-xs text-blue-700 font-semibold">建議標準：約體重 (kg) × 1.2~1.8 克</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            構成肌肉、器官與免疫抗體的主要成分，有助於組織修復、維持肌肉量與促進新陳代謝。
+                        </p>
+                    </div>
+
+                    <!-- 碳水化合物 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                            <span>🍚</span> 碳水化合物 (Carbs)
+                        </div>
+                        <p class="text-xs text-amber-700 font-semibold">建議標準：佔每日總熱量約 50%</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            大腦與肌肉的主要能量來源。建議優先選擇未精製的原型全榖雜糧類（如燕麥、地瓜、糙米）。
+                        </p>
+                    </div>
+
+                    <!-- 脂肪 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                            <span>🥑</span> 總脂肪 (Fats)
+                        </div>
+                        <p class="text-xs text-purple-700 font-semibold">建議標準：佔每日總熱量約 20%~30%</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            協助脂溶性維生素（A、D、E、K）吸收、維持細胞膜完整與平衡賀爾蒙。應多選好油（如堅果、橄欖油）。
+                        </p>
+                    </div>
+
+                    <!-- 精緻糖 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                            <span>🍬</span> 精緻糖 (Sugars)
+                        </div>
+                        <p class="text-xs text-pink-700 font-semibold">建議上限：不超過總熱量的 10% (約50g)</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            包含食品添加的蔗糖、果糖與黑糖等。過量攝取易導致齲齒、肥胖、代謝症候群與加速身體發炎。
+                        </p>
+                    </div>
+
+                    <!-- 飽和脂肪 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                            <span>🧀</span> 飽和脂肪 (Saturated Fat)
+                        </div>
+                        <p class="text-xs text-orange-700 font-semibold">建議上限：不超過總熱量的 10% (約22g)</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            多存在於動物性脂肪與棕櫚油中。攝取過量容易引發壞膽固醇 (LDL-C) 升高，增加心血管疾病風險。
+                        </p>
+                    </div>
+
+                    <!-- 反式脂肪 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                            <span>🚫</span> 反式脂肪 (Trans Fat)
+                        </div>
+                        <p class="text-xs text-rose-700 font-semibold">建議上限：低於總熱量的 1% (儘可能趨近0)</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            常見於人工氫化植物油（如人造奶油、糕點、炸物）。對心血管健康危害極大，應嚴格限制攝取。
+                        </p>
+                    </div>
+
+                    <!-- 鈉含量 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                            <span>🧂</span> 鈉含量 (Sodium)
+                        </div>
+                        <p class="text-xs text-rose-700 font-semibold">建議上限：每日不超過 2,300 mg (約6g鹽)</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            維持體液平衡與神經傳導。過量易引發高血壓、水腫與腎臟負擔。（每日跨日順利控鈉可獲獎勵！）
+                        </p>
+                    </div>
+
+                    <!-- 水分 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/70 space-y-1">
+                        <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                            <span>💧</span> 水分 (Water)
+                        </div>
+                        <p class="text-xs text-sky-700 font-semibold">建議標準：約體重 (kg) × 30~40 ml</p>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            促進新陳代謝、排毒與維持體溫。充足補水能大幅改善精神狀態並減緩飢餓感。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- EDIT WATER MODAL -->
+    <div id="edit-water-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border-4 border-amber-950 p-6 max-w-xs w-full shadow-[6px_6px_0px_0px_#3D2314] space-y-4">
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">💧 修改今日飲水量</h3>
+            <form onsubmit="saveEditWater(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">今日已攝取總水量 (ml)</label>
+                    <input type="number" id="edit-water-input" min="0" step="1" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" onclick="adjustEditWater(-250)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-1.5 rounded-lg transition-all">- 250ml</button>
+                    <button type="button" onclick="document.getElementById('edit-water-input').value = 0" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold py-1.5 rounded-lg transition-all">歸零重置</button>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeEditWaterModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl border border-slate-300 transition-all">
+                        取消
+                    </button>
+                    <button type="submit" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-sm">
+                        儲存修改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT FOOD MODAL -->
+    <div id="edit-food-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border-4 border-amber-950 p-6 max-w-md w-full shadow-[6px_6px_0px_0px_#3D2314] space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">✏️ 編輯飲食紀錄</h3>
+            <form id="edit-food-form" onsubmit="saveEditFood(event)" class="space-y-3">
+                <input type="hidden" id="edit-food-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">食物名稱</label>
+                    <input type="text" id="edit-food-name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">熱量 (kcal)</label>
+                        <input type="number" id="edit-food-cal" step="0.1" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">蛋白質 (g)</label>
+                        <input type="number" id="edit-food-protein" step="0.1" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">碳水化合物 (g)</label>
+                        <input type="number" id="edit-food-carbs" step="0.1" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">脂肪 (g)</label>
+                        <input type="number" id="edit-food-fat" step="0.1" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">糖 (g)</label>
+                        <input type="number" id="edit-food-sugar" step="0.1" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">飽和脂肪 (g)</label>
+                        <input type="number" id="edit-food-satfat" step="0.1" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">反式脂肪 (g)</label>
+                        <input type="number" id="edit-food-transfat" step="0.1" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-xs">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">鈉含量 (mg)</label>
+                    <input type="number" id="edit-food-sodium" step="0.1" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeEditFoodModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl border border-slate-300 transition-all">
+                        取消
+                    </button>
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-sm">
+                        儲存修改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PET SWITCH CONFIRMATION MODAL -->
+    <div id="pet-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border-4 border-amber-950 p-6 max-w-sm w-full text-center shadow-[6px_6px_0px_0px_#3D2314] space-y-4">
+            <div class="w-16 h-16 bg-amber-100 rounded-full border-2 border-amber-950 flex items-center justify-center mx-auto text-4xl shadow-sm">
+                <span id="modal-pet-emoji">🐱</span>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">確認更換寵物夥伴？</h3>
+                <p class="text-xs text-slate-500 mt-1">您即將切換夥伴為【<span id="modal-pet-name" class="font-bold text-amber-900">暖心花貓</span>】</p>
+                <p class="text-[11px] text-rose-500 font-semibold mt-1">⚠️ 更換後寵物等級將重置為 Lv.1 (0 XP)</p>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closePetModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl border border-slate-300 transition-all">
+                    取消
+                </button>
+                <button onclick="confirmSelectPet()" class="flex-1 bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs font-bold py-2.5 rounded-xl border-2 border-amber-950 shadow-[2px_2px_0px_0px_#3D2314] transition-all">
+                    確定更換
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Application Script -->
+    <script>
+        let currentUser = 'guest'; // 預設單機本機儲存
+        let pendingPetKey = null;
+
+        // 全域 state 宣告
+        let state = {
+            profile: { gender: '', age: '', weight: '', height: '', activity: '', goal: '' },
+            hasInitializedProfile: false, // 標記是否已完成首次個人資料輸入
+            targets: { calories: 2000, protein: 120, carbs: 250, fat: 65, sugar: 50, satFat: 22, transFat: 2.2, sodium: 2300, water: 2000 },
+            logs: [],
+            weightLogs: [],
+            customPresets: [],
+            waterConsumed: 0,
+            selectedPetType: 'cat',
+            game: { level: 1, xp: 0, coins: 50, streak: 1, lastActiveDate: null, lastClickDate: null, clickCount: 0, unlockedAchievements: [] }
+        };
+
+        const PET_TYPES = {
+            cat: { name: '暖心花貓', emoji: '🐱' },
+            dog: { name: '忠誠柴柴', emoji: '🐶' },
+            bunny: { name: '棉花軟兔', emoji: '🐰' },
+            hamster: { name: '圓滾倉鼠', emoji: '🐹' },
+            dragon: { name: '守護小龍', emoji: '🐉' }
+        };
+
+        const FEEDS = [
+            { id: 'feed_1', name: '基礎乾糧', cost: 10, xp: 15, reqStreak: 1, icon: '🥣' },
+            { id: 'feed_2', name: '鮮肉罐頭', cost: 25, xp: 40, reqStreak: 2, icon: '🥫' },
+            { id: 'feed_3', name: '美味肉排', cost: 50, xp: 90, reqStreak: 3, icon: '🐟' }
+        ];
+
+        const ACHIEVEMENTS = [
+            { id: 'first_log', title: '健康第一步', desc: '完成第一次紀錄', icon: '📝', rewardXP: 15, rewardCoins: 10 },
+            { id: 'low_sodium', title: '控鈉衛士', desc: '成功控制每日鈉攝取量未超標', icon: '🧂', rewardXP: 25, rewardCoins: 15 },
+            { id: 'goal_cal', title: '熱量達人', desc: '今日總熱量成功達標', icon: '🔥', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_protein', title: '肌力滿分', desc: '今日蛋白質成功達標', icon: '🥩', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_carbs', title: '能量充沛', desc: '今日碳水化合物成功達標', icon: '🍚', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_fat', title: '好油平衡', desc: '今日脂肪成功達標', icon: '🥑', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_water', title: '水潤大使', desc: '今日水分攝取成功達標', icon: '💧', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_sugar', title: '控糖達人', desc: '今日精緻糖控制在建議上限內', icon: '🍬', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_satfat', title: '輕脂守護', desc: '今日飽和脂肪控制在建議上限內', icon: '🧀', rewardXP: 20, rewardCoins: 10 },
+            { id: 'goal_transfat', title: '純淨飲食', desc: '今日反式脂肪控制在建議上限內', icon: '🚫', rewardXP: 20, rewardCoins: 10 },
+            { id: 'all_goals_met', title: '營養大滿貫', desc: '今日所有營養指標與水分皆順利達標且未超標！', icon: '👑', rewardXP: 100, rewardCoins: 50 }
+        ];
+
+        // 單筆飲食紀錄發放的經驗值與金幣常數（刪除時需收回）
+        const FOOD_LOG_REWARD_XP = 15;
+        const FOOD_LOG_REWARD_COINS = 10;
+
+        // 連鎖店與泡麵快捷資料庫
+        const QUICK_FOOD_PRESETS = {
+            chain: {
+                '麥當勞': [
+                    { name: '麥當勞 大麥克', cal: 530, protein: 27, carbs: 42, fat: 28, sugar: 9, satFat: 11, transFat: 0.5, sodium: 960 },
+                    { name: '麥當勞 雙層牛肉吉事堡', cal: 450, protein: 26, carbs: 35, fat: 23, sugar: 7, satFat: 11, transFat: 0.8, sodium: 1050 },
+                    { name: '麥當勞 四盎司牛肉堡', cal: 520, protein: 30, carbs: 41, fat: 26, sugar: 9, satFat: 12, transFat: 1.0, sodium: 1120 },
+                    { name: '麥當勞 雙層四盎司牛肉堡', cal: 740, protein: 48, carbs: 42, fat: 42, sugar: 9, satFat: 20, transFat: 1.8, sodium: 1480 },
+                    { name: '麥當勞 吉事漢堡', cal: 300, protein: 15, carbs: 33, fat: 12, sugar: 7, satFat: 6, transFat: 0.4, sodium: 680 },
+                    { name: '麥當勞 麥香魚', cal: 330, protein: 15, carbs: 38, fat: 13, sugar: 5, satFat: 2.5, transFat: 0, sodium: 560 },
+                    { name: '麥當勞 麥香雞', cal: 360, protein: 14, carbs: 41, fat: 16, sugar: 5, satFat: 3, transFat: 0, sodium: 780 },
+                    { name: '麥當勞 勁辣雞腿堡', cal: 490, protein: 24, carbs: 45, fat: 23, sugar: 6, satFat: 4.5, transFat: 0, sodium: 980 },
+                    { name: '麥當勞 嫩煎雞腿堡', cal: 360, protein: 26, carbs: 39, fat: 11, sugar: 8, satFat: 2.5, transFat: 0, sodium: 720 },
+                    { name: '麥當勞 麥脆雞腿(原味/辣味 1塊)', cal: 310, protein: 19, carbs: 11, fat: 21, sugar: 0, satFat: 4.5, transFat: 0, sodium: 580 },
+                    { name: '麥當勞 麥克雞塊(4塊)', cal: 180, protein: 10, carbs: 11, fat: 11, sugar: 0, satFat: 2, transFat: 0, sodium: 360 },
+                    { name: '麥當勞 麥克雞塊(6塊)', cal: 270, protein: 15, carbs: 16, fat: 16, sugar: 0, satFat: 3, transFat: 0, sodium: 540 },
+                    { name: '麥當勞 麥克雞塊(10塊)', cal: 450, protein: 25, carbs: 27, fat: 27, sugar: 0, satFat: 5, transFat: 0, sodium: 900 },
+                    { name: '麥當勞 勁辣香雞翅(2塊)', cal: 240, protein: 14, carbs: 12, fat: 15, sugar: 0, satFat: 3.5, transFat: 0, sodium: 520 },
+                    { name: '麥當勞 薯條(小)', cal: 230, protein: 3, carbs: 30, fat: 11, sugar: 0, satFat: 1.5, transFat: 0, sodium: 180 },
+                    { name: '麥當勞 薯條(中)', cal: 330, protein: 4, carbs: 43, fat: 16, sugar: 0, satFat: 2.5, transFat: 0, sodium: 260 },
+                    { name: '麥當勞 薯條(大)', cal: 470, protein: 6, carbs: 61, fat: 22, sugar: 0, satFat: 3.5, transFat: 0, sodium: 370 },
+                    { name: '麥當勞 蘋果派', cal: 230, protein: 2, carbs: 31, fat: 11, sugar: 13, satFat: 4.5, transFat: 0, sodium: 170 },
+                    { name: '麥當勞 蛋捲冰淇淋', cal: 145, protein: 3.5, carbs: 23, fat: 4, sugar: 17, satFat: 2.5, transFat: 0, sodium: 65 },
+                    { name: '麥當勞 冰炫風(OREO)', cal: 340, protein: 8, carbs: 52, fat: 11, sugar: 41, satFat: 6.5, transFat: 0.2, sodium: 210 },
+                    { name: '麥當勞 豬肉滿福堡加蛋', cal: 380, protein: 21, carbs: 29, fat: 20, sugar: 3, satFat: 7.5, transFat: 0.2, sodium: 820 },
+                    { name: '麥當勞 薯餅', cal: 150, protein: 1.5, carbs: 15, fat: 9.5, sugar: 0, satFat: 1.5, transFat: 0, sodium: 310 },
+                    { name: '麥當勞 玉米湯(小)', cal: 95, protein: 2.5, carbs: 15, fat: 2.5, sugar: 4, satFat: 1, transFat: 0, sodium: 420 },
+                    { name: '麥當勞 無糖綠茶/紅茶(中)', cal: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, satFat: 0, transFat: 0, sodium: 10 },
+                    { name: '麥當勞 可口可樂(中)', cal: 150, protein: 0, carbs: 39, fat: 0, sugar: 39, satFat: 0, transFat: 0, sodium: 25 }
+                ],
+                '肯德基': [
+                    { name: '肯德基 咔啦脆雞(1塊)', cal: 340, protein: 21, carbs: 14, fat: 22, sugar: 0, satFat: 5, transFat: 0, sodium: 620 },
+                    { name: '肯德基 上校薄脆雞(1塊)', cal: 295, protein: 22, carbs: 11, fat: 18, sugar: 0, satFat: 4, transFat: 0, sodium: 590 },
+                    { name: '肯德基 青花椒香麻脆雞(1塊)', cal: 365, protein: 21, carbs: 17, fat: 24, sugar: 2, satFat: 5.5, transFat: 0, sodium: 740 },
+                    { name: '肯德基 咔啦雞腿堡', cal: 485, protein: 25, carbs: 44, fat: 23, sugar: 5, satFat: 4.5, transFat: 0, sodium: 920 },
+                    { name: '肯德基 紐奧良烤雞腿堡', cal: 410, protein: 24, carbs: 40, fat: 17, sugar: 7, satFat: 3.5, transFat: 0, sodium: 850 },
+                    { name: '肯德基 花生熔岩咔啦雞腿堡', cal: 640, protein: 30, carbs: 48, fat: 36, sugar: 9, satFat: 8, transFat: 0, sodium: 1080 },
+                    { name: '肯德基 墨西哥莎莎霸王捲', cal: 430, protein: 21, carbs: 46, fat: 18, sugar: 4, satFat: 4, transFat: 0, sodium: 890 },
+                    { name: '肯德基 紙包雞(義式香草)', cal: 320, protein: 32, carbs: 6, fat: 18, sugar: 2, satFat: 4.5, transFat: 0, sodium: 780 },
+                    { name: '肯德基 上校雞塊(4塊)', cal: 190, protein: 10, carbs: 12, fat: 11, sugar: 0, satFat: 2.5, transFat: 0, sodium: 380 },
+                    { name: '肯德基 上校雞塊(8塊)', cal: 380, protein: 20, carbs: 24, fat: 22, sugar: 0, satFat: 5, transFat: 0, sodium: 760 },
+                    { name: '肯德基 勁爆雞米花(大)', cal: 360, protein: 18, carbs: 24, fat: 21, sugar: 1, satFat: 4, transFat: 0, sodium: 690 },
+                    { name: '肯德基 香酥脆薯(中)', cal: 310, protein: 4, carbs: 41, fat: 14, sugar: 0, satFat: 2.5, transFat: 0, sodium: 320 },
+                    { name: '肯德基 雙色轉轉QQ球', cal: 280, protein: 2, carbs: 42, fat: 11, sugar: 12, satFat: 3, transFat: 0, sodium: 140 },
+                    { name: '肯德基 雞汁風味飯', cal: 245, protein: 4.5, carbs: 48, fat: 3.5, sugar: 1, satFat: 1, transFat: 0, sodium: 460 },
+                    { name: '肯德基 原味蛋撻', cal: 182, protein: 3, carbs: 18, fat: 11, sugar: 9, satFat: 6, transFat: 0.2, sodium: 110 },
+                    { name: '肯德基 玉米濃湯(小)', cal: 110, protein: 3, carbs: 16, fat: 3.5, sugar: 4, satFat: 1.5, transFat: 0, sodium: 450 }
+                ],
+                '摩斯漢堡': [
+                    { name: '摩斯漢堡 海洋珍珠堡', cal: 410, protein: 16, carbs: 62, fat: 11, sugar: 8, satFat: 2, transFat: 0, sodium: 790 },
+                    { name: '摩斯漢堡 燒肉珍珠堡', cal: 445, protein: 17, carbs: 64, fat: 13, sugar: 9, satFat: 4, transFat: 0, sodium: 830 },
+                    { name: '摩斯漢堡 薑燒珍珠堡', cal: 420, protein: 18, carbs: 63, fat: 10, sugar: 8, satFat: 3, transFat: 0, sodium: 810 },
+                    { name: '摩斯漢堡 摩斯漢堡', cal: 350, protein: 16, carbs: 33, fat: 17, sugar: 6, satFat: 6.5, transFat: 0.3, sodium: 610 },
+                    { name: '摩斯漢堡 摩斯吉士漢堡', cal: 395, protein: 19, carbs: 34, fat: 20, sugar: 6, satFat: 8, transFat: 0.4, sodium: 740 },
+                    { name: '摩斯漢堡 蜜汁烤雞起司堡', cal: 385, protein: 22, carbs: 39, fat: 15, sugar: 9, satFat: 4.5, transFat: 0, sodium: 780 },
+                    { name: '摩斯漢堡 黃金炸蝦堡', cal: 430, protein: 14, carbs: 46, fat: 21, sugar: 6, satFat: 3.5, transFat: 0, sodium: 720 },
+                    { name: '摩斯漢堡 摘鮮綠烤雞堡(生菜包)', cal: 220, protein: 20, carbs: 11, fat: 11, sugar: 5, satFat: 2.5, transFat: 0, sodium: 560 },
+                    { name: '摩斯漢堡 摩斯雞塊(5塊)', cal: 235, protein: 13, carbs: 14, fat: 14, sugar: 0, satFat: 3, transFat: 0, sodium: 460 },
+                    { name: '摩斯漢堡 和風炸雞', cal: 280, protein: 18, carbs: 14, fat: 17, sugar: 1, satFat: 3.5, transFat: 0, sodium: 520 },
+                    { name: '摩斯漢堡 黃金薯條(大)', cal: 340, protein: 4.5, carbs: 45, fat: 16, sugar: 0, satFat: 2.5, transFat: 0, sodium: 290 },
+                    { name: '摩斯漢堡 方塊薯餅(3個)', cal: 185, protein: 2, carbs: 21, fat: 10, sugar: 0, satFat: 2, transFat: 0, sodium: 330 },
+                    { name: '摩斯漢堡 北海道可樂餅(原味)', cal: 215, protein: 3.5, carbs: 27, fat: 10, sugar: 3, satFat: 2, transFat: 0, sodium: 310 },
+                    { name: '摩斯漢堡 夏威夷鮮蔬沙拉', cal: 65, protein: 2, carbs: 12, fat: 1, sugar: 7, satFat: 0.2, transFat: 0, sodium: 85 },
+                    { name: '摩斯漢堡 摩斯冰紅茶(大)', cal: 135, protein: 0, carbs: 34, fat: 0, sugar: 33, satFat: 0, transFat: 0, sodium: 15 },
+                    { name: '摩斯漢堡 玉米濃湯', cal: 125, protein: 3, carbs: 18, fat: 4.5, sugar: 4, satFat: 2, transFat: 0, sodium: 490 }
+                ],
+                '7-11': [
+                    { name: '7-11 雞胸肉(原味/黑胡椒/蒜香)', cal: 115, protein: 23, carbs: 1, fat: 2, sugar: 0.5, satFat: 0.5, transFat: 0, sodium: 360 },
+                    { name: '7-11 茶葉蛋(1顆)', cal: 75, protein: 7, carbs: 1, fat: 5, sugar: 0.5, satFat: 1.5, transFat: 0, sodium: 210 },
+                    { name: '7-11 溫泉蛋(1顆)', cal: 72, protein: 6.5, carbs: 1.2, fat: 4.8, sugar: 0.8, satFat: 1.4, transFat: 0, sodium: 195 },
+                    { name: '7-11 溏心蛋筍飯飯糰', cal: 215, protein: 6.5, carbs: 38, fat: 4, sugar: 2, satFat: 1, transFat: 0, sodium: 420 },
+                    { name: '7-11 鮪魚御飯糰', cal: 205, protein: 6, carbs: 36, fat: 4, sugar: 1.5, satFat: 0.8, transFat: 0, sodium: 380 },
+                    { name: '7-11 肉鬆御飯糰', cal: 225, protein: 6.5, carbs: 39, fat: 4.8, sugar: 3.5, satFat: 1.2, transFat: 0, sodium: 430 },
+                    { name: '7-11 紐奧良風味烤雞三明治', cal: 285, protein: 17, carbs: 29, fat: 11, sugar: 5, satFat: 3.5, transFat: 0, sodium: 540 },
+                    { name: '7-11 照燒雞溏心蛋三明治', cal: 295, protein: 15, carbs: 32, fat: 12, sugar: 6, satFat: 3, transFat: 0, sodium: 560 },
+                    { name: '7-11 健身G肉餐盒', cal: 495, protein: 36, carbs: 61, fat: 12, sugar: 4, satFat: 2.5, transFat: 0, sodium: 820 },
+                    { name: '7-11 奮起湖軟燒肉便當', cal: 685, protein: 26, carbs: 94, fat: 22, sugar: 8, satFat: 6.5, transFat: 0, sodium: 1120 },
+                    { name: '7-11 雙拼起司三重奏焗飯', cal: 690, protein: 25, carbs: 76, fat: 31, sugar: 6, satFat: 14, transFat: 0.4, sodium: 1180 },
+                    { name: '7-11 爪哇咖哩飯', cal: 640, protein: 19, carbs: 96, fat: 20, sugar: 9, satFat: 6, transFat: 0, sodium: 1150 },
+                    { name: '7-11 麻婆豆腐燴飯', cal: 610, protein: 21, carbs: 89, fat: 18, sugar: 6, satFat: 4.5, transFat: 0, sodium: 1240 },
+                    { name: '7-11 凱撒風味雞肉沙拉', cal: 195, protein: 15, carbs: 11, fat: 10, sugar: 4, satFat: 2.5, transFat: 0, sodium: 430 },
+                    { name: '7-11 統一陽光無加糖高纖豆漿', cal: 162, protein: 14.4, carbs: 11.2, fat: 7.2, sugar: 2.4, satFat: 1.2, transFat: 0, sodium: 95 },
+                    { name: '7-11 CITY CAFE 冰美式(大)', cal: 15, protein: 0.8, carbs: 2.5, fat: 0.2, sugar: 0, satFat: 0, transFat: 0, sodium: 10 },
+                    { name: '7-11 CITY CAFE 冰拿鐵(大)', cal: 165, protein: 8.5, carbs: 13, fat: 8.8, sugar: 12, satFat: 5.5, transFat: 0, sodium: 110 }
+                ],
+                '全家': [
+                    { name: '全家 舒肥雞胸肉(原味/義式黑胡椒)', cal: 120, protein: 24, carbs: 1, fat: 2, sugar: 0.5, satFat: 0.5, transFat: 0, sodium: 380 },
+                    { name: '全家 茶葉蛋(1顆)', cal: 75, protein: 7, carbs: 1, fat: 5, sugar: 0.5, satFat: 1.5, transFat: 0, sodium: 205 },
+                    { name: '全家 鮪魚飯糰', cal: 210, protein: 6, carbs: 36, fat: 4.5, sugar: 1.5, satFat: 1, transFat: 0, sodium: 390 },
+                    { name: '全家 鮭魚卵鮭魚大飯糰', cal: 265, protein: 9.5, carbs: 45, fat: 5.2, sugar: 2, satFat: 1.2, transFat: 0, sodium: 510 },
+                    { name: '全家 烤多蛋白餐盒', cal: 520, protein: 35, carbs: 62, fat: 14, sugar: 4, satFat: 3, transFat: 0, sodium: 890 },
+                    { name: '全家 迷迭香烤雞腿排餐盒', cal: 560, protein: 31, carbs: 65, fat: 19, sugar: 5, satFat: 4.5, transFat: 0, sodium: 940 },
+                    { name: '全家 鼎泰豐香辣醬雞肉炒麵', cal: 635, protein: 24, carbs: 82, fat: 23, sugar: 7, satFat: 5, transFat: 0, sodium: 1280 },
+                    { name: '全家 奶油培根義大利麵', cal: 650, protein: 22, carbs: 74, fat: 29, sugar: 6, satFat: 12, transFat: 0.3, sodium: 1140 },
+                    { name: '全家 經典總匯三明治', cal: 310, protein: 14, carbs: 33, fat: 13, sugar: 5, satFat: 3.5, transFat: 0, sodium: 590 },
+                    { name: '全家 燻雞握沙拉', cal: 235, protein: 13, carbs: 24, fat: 9.5, sugar: 4, satFat: 2, transFat: 0, sodium: 480 },
+                    { name: '全家 夯番薯(中 約150g)', cal: 185, protein: 2.2, carbs: 43, fat: 0.4, sugar: 11, satFat: 0.1, transFat: 0, sodium: 55 },
+                    { name: '全家 無加糖厚豆漿(瓶)', cal: 165, protein: 15.5, carbs: 7.5, fat: 8, sugar: 1.5, satFat: 1.2, transFat: 0, sodium: 65 },
+                    { name: '全家 Let\'s Café 經典美式(大)', cal: 18, protein: 1, carbs: 3, fat: 0.2, sugar: 0, satFat: 0, transFat: 0, sodium: 12 },
+                    { name: '全家 Let\'s Café 經典拿鐵(大)', cal: 175, protein: 9, carbs: 14, fat: 9.2, sugar: 13, satFat: 5.8, transFat: 0, sodium: 115 }
+                ],
+                '八方雲集': [
+                    { name: '八方雲集 招牌鍋貼(1顆)', cal: 75, protein: 2.8, carbs: 7.6, fat: 3.7, sugar: 0.4, satFat: 1.1, transFat: 0, sodium: 118 },
+                    { name: '八方雲集 韭菜鍋貼(1顆)', cal: 73, protein: 2.7, carbs: 7.4, fat: 3.6, sugar: 0.4, satFat: 1.1, transFat: 0, sodium: 115 },
+                    { name: '八方雲集 韓式辣味鍋貼(1顆)', cal: 76, protein: 2.8, carbs: 7.8, fat: 3.7, sugar: 0.5, satFat: 1.1, transFat: 0, sodium: 132 },
+                    { name: '八方雲集 咖哩雞肉鍋貼(1顆)', cal: 72, protein: 2.9, carbs: 7.7, fat: 3.3, sugar: 0.5, satFat: 0.9, transFat: 0, sodium: 121 },
+                    { name: '八方雲集 玉米鍋貼(1顆)', cal: 74, protein: 2.6, carbs: 8.0, fat: 3.5, sugar: 0.6, satFat: 1.0, transFat: 0, sodium: 114 },
+                    { name: '八方雲集 招牌水餃(1顆)', cal: 58, protein: 2.6, carbs: 7.2, fat: 2.1, sugar: 0.3, satFat: 0.7, transFat: 0, sodium: 96 },
+                    { name: '八方雲集 韭菜水餃(1顆)', cal: 56, protein: 2.5, carbs: 7.0, fat: 2.0, sugar: 0.3, satFat: 0.7, transFat: 0, sodium: 94 },
+                    { name: '八方雲集 韓式辣味水餃(1顆)', cal: 59, protein: 2.6, carbs: 7.4, fat: 2.1, sugar: 0.4, satFat: 0.7, transFat: 0, sodium: 108 },
+                    { name: '八方雲集 鮮蝦水餃(1顆)', cal: 54, protein: 2.8, carbs: 6.9, fat: 1.7, sugar: 0.3, satFat: 0.5, transFat: 0, sodium: 98 },
+                    { name: '八方雲集 菜肉大餛飩麵', cal: 520, protein: 21, carbs: 76, fat: 14, sugar: 3, satFat: 4.5, transFat: 0, sodium: 1290 },
+                    { name: '八方雲集 招牌乾麵', cal: 460, protein: 14, carbs: 68, fat: 14, sugar: 3, satFat: 4, transFat: 0, sodium: 980 },
+                    { name: '八方雲集 紹辣乾麵', cal: 495, protein: 15, carbs: 69, fat: 17, sugar: 4, satFat: 4.5, transFat: 0, sodium: 1120 },
+                    { name: '八方雲集 酸辣湯', cal: 195, protein: 9, carbs: 24, fat: 7, sugar: 4, satFat: 2, transFat: 0, sodium: 880 },
+                    { name: '八方雲集 玉米濃湯', cal: 210, protein: 6, carbs: 29, fat: 7.5, sugar: 6, satFat: 3, transFat: 0, sodium: 760 },
+                    { name: '八方雲集 燙青菜', cal: 95, protein: 3, carbs: 9, fat: 5, sugar: 2, satFat: 1.2, transFat: 0, sodium: 420 },
+                    { name: '八方雲集 無糖豆漿', cal: 120, protein: 11, carbs: 6, fat: 5.5, sugar: 1, satFat: 0.9, transFat: 0, sodium: 45 }
+                ]
+            },
+            noodle: {
+                '統一': [
+                    { name: '統一肉燥麵(袋裝)', cal: 432, protein: 8.6, carbs: 55.2, fat: 19.6, sugar: 2.1, satFat: 9.2, transFat: 0, sodium: 1580 },
+                    { name: '統一蔥燒牛肉麵(袋裝)', cal: 455, protein: 9.5, carbs: 58.0, fat: 20.5, sugar: 2.8, satFat: 9.6, transFat: 0, sodium: 1720 },
+                    { name: '統一鮮蝦麵(袋裝)', cal: 418, protein: 8.2, carbs: 54.6, fat: 18.5, sugar: 2.0, satFat: 8.8, transFat: 0, sodium: 1540 },
+                    { name: '統一調理料理包 蔥燒牛肉麵(碗裝)', cal: 545, protein: 18.5, carbs: 65.0, fat: 23.0, sugar: 4.2, satFat: 10.1, transFat: 0.2, sodium: 2060 },
+                    { name: '統一調理料理包 紅燒半筋半肉麵', cal: 585, protein: 21.0, carbs: 66.5, fat: 26.0, sugar: 4.5, satFat: 11.2, transFat: 0.3, sodium: 2180 },
+                    { name: '統一麵小時光麵館 麻醬乾麵', cal: 510, protein: 12.5, carbs: 64.0, fat: 22.5, sugar: 3.4, satFat: 6.5, transFat: 0, sodium: 1490 },
+                    { name: '統一麵小時光麵館 桂丁雞酒香湯麵', cal: 470, protein: 16.0, carbs: 58.5, fat: 19.0, sugar: 2.6, satFat: 7.8, transFat: 0, sodium: 1680 },
+                    { name: '來一客 鮮蝦魚板風味杯麵', cal: 315, protein: 7.2, carbs: 43.5, fat: 12.4, sugar: 2.5, satFat: 5.8, transFat: 0, sodium: 1290 },
+                    { name: '來一客 京燉肉骨風味杯麵', cal: 332, protein: 7.5, carbs: 44.2, fat: 13.8, sugar: 2.8, satFat: 6.4, transFat: 0, sodium: 1360 },
+                    { name: '來一客 川辣牛肉風味杯麵', cal: 328, protein: 7.8, carbs: 43.8, fat: 13.5, sugar: 2.4, satFat: 6.2, transFat: 0, sodium: 1450 },
+                    { name: '來一客 韓式泡菜風味杯麵', cal: 320, protein: 7.0, carbs: 45.0, fat: 12.5, sugar: 3.2, satFat: 5.9, transFat: 0, sodium: 1410 },
+                    { name: '來一客 肉燥菠菜風味杯麵', cal: 310, protein: 7.0, carbs: 43.0, fat: 12.0, sugar: 2.2, satFat: 5.6, transFat: 0, sodium: 1310 },
+                    { name: '來一客 椒麻雞白湯風味杯麵', cal: 338, protein: 8.1, carbs: 44.6, fat: 14.2, sugar: 2.6, satFat: 6.5, transFat: 0, sodium: 1430 },
+                    { name: '滿漢大餐 蔥燒牛肉麵', cal: 560, protein: 19.5, carbs: 66.0, fat: 24.2, sugar: 4.5, satFat: 10.5, transFat: 0.3, sodium: 2150 },
+                    { name: '滿漢大餐 珍味牛肉麵', cal: 535, protein: 18.8, carbs: 64.5, fat: 22.4, sugar: 4.0, satFat: 9.8, transFat: 0.3, sodium: 2080 },
+                    { name: '滿漢大餐 麻辣鍋牛肉麵', cal: 590, protein: 20.2, carbs: 65.5, fat: 27.5, sugar: 4.8, satFat: 11.8, transFat: 0.3, sodium: 2280 },
+                    { name: '滿漢大餐 金門高粱酒燉牛肉麵', cal: 575, protein: 19.8, carbs: 65.0, fat: 25.5, sugar: 4.3, satFat: 10.9, transFat: 0.3, sodium: 2190 },
+                    { name: '滿漢大餐 酸菜牛肉麵', cal: 545, protein: 19.0, carbs: 64.0, fat: 23.5, sugar: 4.1, satFat: 10.2, transFat: 0.2, sodium: 2140 },
+                    { name: '阿Q桶麵 雞汁排骨風味', cal: 515, protein: 10.2, carbs: 66.5, fat: 23.1, sugar: 3.0, satFat: 10.8, transFat: 0, sodium: 1890 },
+                    { name: '阿Q桶麵 紅椒牛肉風味', cal: 525, protein: 10.5, carbs: 67.0, fat: 23.8, sugar: 3.2, satFat: 11.0, transFat: 0, sodium: 1960 },
+                    { name: '阿Q桶麵 韓式泡菜風味', cal: 505, protein: 9.8, carbs: 66.0, fat: 22.0, sugar: 3.5, satFat: 10.2, transFat: 0, sodium: 1920 },
+                    { name: '阿Q桶麵 生猛海鮮風味', cal: 495, protein: 10.0, carbs: 65.5, fat: 21.2, sugar: 2.8, satFat: 9.9, transFat: 0, sodium: 1850 },
+                    { name: '阿Q桶麵 蒜香珍肉風味', cal: 520, protein: 10.4, carbs: 66.8, fat: 23.5, sugar: 3.1, satFat: 10.9, transFat: 0, sodium: 1910 }
+                ],
+                '維力': [
+                    { name: '維力炸醬麵(袋裝)', cal: 465, protein: 9.8, carbs: 57.5, fat: 21.8, sugar: 2.8, satFat: 9.8, transFat: 0, sodium: 1620 },
+                    { name: '維力炸醬麵(重量碗)', cal: 585, protein: 12.2, carbs: 72.0, fat: 27.5, sugar: 3.5, satFat: 12.4, transFat: 0, sodium: 2040 },
+                    { name: '維力炸醬麵 素食風味(袋裝)', cal: 455, protein: 9.2, carbs: 58.0, fat: 20.8, sugar: 3.0, satFat: 9.5, transFat: 0, sodium: 1560 },
+                    { name: '維力炸醬麵 辣味風味(袋裝)', cal: 472, protein: 10.0, carbs: 57.8, fat: 22.2, sugar: 2.9, satFat: 10.0, transFat: 0, sodium: 1710 },
+                    { name: '維力一度贊 紅燒牛肉麵(碗裝)', cal: 530, protein: 17.5, carbs: 63.5, fat: 22.8, sugar: 3.8, satFat: 10.1, transFat: 0.2, sodium: 2090 },
+                    { name: '維力一度贊 爌肉麵(碗裝)', cal: 545, protein: 18.0, carbs: 64.0, fat: 24.0, sugar: 4.2, satFat: 10.8, transFat: 0.2, sodium: 2020 },
+                    { name: '維力一度贊 麻辣牛肉麵(碗裝)', cal: 560, protein: 18.2, carbs: 63.0, fat: 25.8, sugar: 4.0, satFat: 11.3, transFat: 0.2, sodium: 2180 },
+                    { name: '維力手打麵 雞汁風味', cal: 440, protein: 8.8, carbs: 56.5, fat: 20.0, sugar: 2.3, satFat: 9.2, transFat: 0, sodium: 1590 },
+                    { name: '維力大乾麵 地獄辣椒豚骨', cal: 540, protein: 11.2, carbs: 66.5, fat: 25.5, sugar: 3.2, satFat: 11.2, transFat: 0, sodium: 1880 },
+                    { name: '維力大乾麵 紅油擔擔', cal: 525, protein: 10.8, carbs: 65.0, fat: 24.2, sugar: 3.0, satFat: 10.5, transFat: 0, sodium: 1790 }
+                ],
+                '味丹': [
+                    { name: '味味A 排骨雞湯麵(袋裝)', cal: 448, protein: 8.4, carbs: 56.8, fat: 20.8, sugar: 2.2, satFat: 9.5, transFat: 0, sodium: 1690 },
+                    { name: '味味A 排骨雞湯麵(碗裝)', cal: 495, protein: 9.5, carbs: 62.5, fat: 23.0, sugar: 2.5, satFat: 10.4, transFat: 0, sodium: 1860 },
+                    { name: '味味A 排骨雞乾麵(香辣風味)', cal: 520, protein: 10.1, carbs: 64.5, fat: 24.5, sugar: 3.1, satFat: 10.9, transFat: 0, sodium: 1770 },
+                    { name: '味味一品 原汁珍味牛肉麵', cal: 545, protein: 19.0, carbs: 65.0, fat: 23.2, sugar: 4.2, satFat: 10.2, transFat: 0.2, sodium: 2120 },
+                    { name: '味味一品 川辣牛肉麵', cal: 565, protein: 19.4, carbs: 64.8, fat: 25.2, sugar: 4.0, satFat: 11.0, transFat: 0.2, sodium: 2210 },
+                    { name: '味味一品 皇朝牛筋麵', cal: 580, protein: 20.5, carbs: 65.5, fat: 26.2, sugar: 4.4, satFat: 11.5, transFat: 0.3, sodium: 2160 },
+                    { name: '味味一品 番茄牛肉麵', cal: 530, protein: 18.6, carbs: 66.0, fat: 21.5, sugar: 5.2, satFat: 9.4, transFat: 0.2, sodium: 2050 },
+                    { name: '味丹 隨緣 素紅燒牛肉風味麵(碗裝)', cal: 430, protein: 8.6, carbs: 58.5, fat: 18.2, sugar: 3.4, satFat: 8.1, transFat: 0, sodium: 1650 },
+                    { name: '味丹 隨緣 麻辣臭豆腐風味麵(碗裝)', cal: 455, protein: 9.2, carbs: 59.0, fat: 20.4, sugar: 3.0, satFat: 9.0, transFat: 0, sodium: 1780 },
+                    { name: '味丹 隨緣 韓式泡菜風味麵(碗裝)', cal: 415, protein: 8.0, carbs: 57.5, fat: 17.0, sugar: 3.6, satFat: 7.6, transFat: 0, sodium: 1620 }
+                ],
+                '台酒': [
+                    { name: '花雕雞麵(台酒碗裝)', cal: 575, protein: 21.5, carbs: 68.5, fat: 23.8, sugar: 4.6, satFat: 9.8, transFat: 0, sodium: 2190 },
+                    { name: '花雕雞麵(台酒袋裝)', cal: 510, protein: 17.0, carbs: 62.0, fat: 21.5, sugar: 3.8, satFat: 9.0, transFat: 0, sodium: 1920 },
+                    { name: '花雕酸菜牛肉麵(台酒碗裝)', cal: 590, protein: 22.0, carbs: 67.5, fat: 25.8, sugar: 4.2, satFat: 11.2, transFat: 0.2, sodium: 2240 },
+                    { name: '麻油雞麵(台酒碗裝)', cal: 595, protein: 22.0, carbs: 67.0, fat: 26.5, sugar: 3.8, satFat: 9.2, transFat: 0, sodium: 2050 },
+                    { name: '麻油雞麵(台酒袋裝)', cal: 525, protein: 17.5, carbs: 61.5, fat: 23.2, sugar: 3.2, satFat: 8.4, transFat: 0, sodium: 1840 },
+                    { name: '酒香椒麻細粉', cal: 440, protein: 13.5, carbs: 56.0, fat: 18.0, sugar: 2.9, satFat: 7.5, transFat: 0, sodium: 1680 },
+                    { name: '紅標米酒 薑母鴨風味麵', cal: 565, protein: 18.5, carbs: 66.0, fat: 24.5, sugar: 4.0, satFat: 9.6, transFat: 0, sodium: 2080 },
+                    { name: '台酒 素花雕酸菜麵(碗裝)', cal: 465, protein: 10.5, carbs: 63.0, fat: 19.2, sugar: 3.5, satFat: 8.2, transFat: 0, sodium: 1760 }
+                ],
+                '農心': [
+                    { name: '辛拉麵(袋裝)', cal: 500, protein: 10.0, carbs: 79.0, fat: 16.0, sugar: 4.0, satFat: 8.0, transFat: 0, sodium: 1790 },
+                    { name: '辛拉麵(碗裝)', cal: 430, protein: 8.5, carbs: 67.0, fat: 14.0, sugar: 3.5, satFat: 7.0, transFat: 0, sodium: 1580 },
+                    { name: '辛拉麵 黑版(袋裝)', cal: 560, protein: 13.0, carbs: 79.0, fat: 21.0, sugar: 4.0, satFat: 10.0, transFat: 0, sodium: 1720 },
+                    { name: '辛拉麵 炒麵(袋裝)', cal: 540, protein: 11.0, carbs: 82.0, fat: 19.0, sugar: 6.0, satFat: 9.0, transFat: 0, sodium: 1340 },
+                    { name: '安城湯麵(袋裝)', cal: 525, protein: 10.5, carbs: 81.0, fat: 17.5, sugar: 4.2, satFat: 8.5, transFat: 0, sodium: 1850 },
+                    { name: '浣熊海鮮烏龍麵(袋裝)', cal: 515, protein: 9.8, carbs: 78.5, fat: 17.2, sugar: 3.8, satFat: 8.2, transFat: 0, sodium: 1760 },
+                    { name: '農心 炸醬麵(袋裝)', cal: 610, protein: 10.5, carbs: 92.0, fat: 22.0, sugar: 8.5, satFat: 10.5, transFat: 0, sodium: 1290 },
+                    { name: '農心 部隊鍋拉麵(袋裝)', cal: 535, protein: 11.2, carbs: 79.5, fat: 18.8, sugar: 4.5, satFat: 9.0, transFat: 0, sodium: 1890 },
+                    { name: '農心 甜辣醬拌麵(袋裝)', cal: 545, protein: 9.5, carbs: 88.0, fat: 17.0, sugar: 13.5, satFat: 8.0, transFat: 0, sodium: 1220 },
+                    { name: '農心 辣味香菇烏龍麵(碗裝)', cal: 410, protein: 8.0, carbs: 66.0, fat: 12.5, sugar: 3.0, satFat: 6.0, transFat: 0, sodium: 1520 }
+                ],
+                '三養': [
+                    { name: '三養 火辣雞肉風味鐵板炒麵(袋裝)', cal: 530, protein: 12.0, carbs: 85.0, fat: 16.0, sugar: 7.0, satFat: 8.0, transFat: 0, sodium: 1280 },
+                    { name: '三養 火辣雞肉風味鐵板炒麵(碗裝)', cal: 440, protein: 9.5, carbs: 71.0, fat: 13.0, sugar: 6.0, satFat: 6.5, transFat: 0, sodium: 1150 },
+                    { name: '三養 奶油白醬火辣雞炒麵(袋裝)', cal: 550, protein: 12.5, carbs: 83.0, fat: 19.0, sugar: 6.5, satFat: 9.5, transFat: 0, sodium: 1320 },
+                    { name: '三養 起司火辣雞炒麵(袋裝)', cal: 555, protein: 13.0, carbs: 82.0, fat: 19.5, sugar: 6.8, satFat: 9.8, transFat: 0, sodium: 1390 },
+                    { name: '三養 雙倍辣火辣雞炒麵(袋裝)', cal: 540, protein: 12.2, carbs: 84.5, fat: 16.8, sugar: 7.2, satFat: 8.4, transFat: 0, sodium: 1420 },
+                    { name: '三養 炸醬火辣雞炒麵(袋裝)', cal: 565, protein: 11.8, carbs: 87.0, fat: 18.5, sugar: 8.0, satFat: 9.0, transFat: 0, sodium: 1360 },
+                    { name: '三養 咖哩火辣雞炒麵(袋裝)', cal: 545, protein: 12.0, carbs: 84.0, fat: 17.5, sugar: 6.2, satFat: 8.6, transFat: 0, sodium: 1310 },
+                    { name: '三養 湯麵 火辣雞肉風味(袋裝)', cal: 510, protein: 11.0, carbs: 80.0, fat: 16.0, sugar: 4.5, satFat: 7.8, transFat: 0, sodium: 1780 }
+                ],
+                '日清': [
+                    { name: '日清合味道 海鮮味杯麵', cal: 325, protein: 7.5, carbs: 46.2, fat: 12.1, sugar: 3.1, satFat: 5.6, transFat: 0, sodium: 1350 },
+                    { name: '日清合味道 醬油味杯麵', cal: 351, protein: 8.2, carbs: 45.8, fat: 14.8, sugar: 2.9, satFat: 6.5, transFat: 0, sodium: 1480 },
+                    { name: '日清合味道 咖哩味杯麵', cal: 412, protein: 8.8, carbs: 49.5, fat: 19.6, sugar: 3.4, satFat: 9.2, transFat: 0, sodium: 1520 },
+                    { name: '日清合味道 香辣海鮮味杯麵', cal: 332, protein: 7.8, carbs: 46.5, fat: 12.8, sugar: 3.0, satFat: 5.9, transFat: 0, sodium: 1420 },
+                    { name: '日清合味道 番茄海鮮味杯麵', cal: 318, protein: 7.4, carbs: 47.0, fat: 11.2, sugar: 4.2, satFat: 5.2, transFat: 0, sodium: 1310 },
+                    { name: '日清合味道 泰式酸辣蝦味杯麵', cal: 328, protein: 7.6, carbs: 46.0, fat: 12.5, sugar: 3.3, satFat: 5.8, transFat: 0, sodium: 1460 },
+                    { name: '日清出前一丁 麻油味即食麵(袋裝)', cal: 455, protein: 9.6, carbs: 58.5, fat: 20.2, sugar: 2.4, satFat: 9.4, transFat: 0, sodium: 1750 },
+                    { name: '日清出前一丁 東京醬油豬骨湯味(袋裝)', cal: 462, protein: 10.2, carbs: 59.0, fat: 20.8, sugar: 2.6, satFat: 9.8, transFat: 0, sodium: 1820 },
+                    { name: '日清拉王 豚骨醬油風味(碗裝)', cal: 435, protein: 11.5, carbs: 64.5, fat: 14.5, sugar: 3.2, satFat: 6.2, transFat: 0, sodium: 1890 },
+                    { name: '日清拉王 味噌風味(碗裝)', cal: 428, protein: 11.2, carbs: 65.0, fat: 13.8, sugar: 3.5, satFat: 5.8, transFat: 0, sodium: 1840 }
+                ]
+            },
+            snack: [
+                { name: '小吃店 滷肉飯(小碗)', cal: 420, protein: 12, carbs: 56, fat: 16, sugar: 4, satFat: 6, transFat: 0, sodium: 780 },
+                { name: '小吃店 滷肉飯(大碗)', cal: 610, protein: 17, carbs: 82, fat: 23, sugar: 5.5, satFat: 8.5, transFat: 0, sodium: 1080 },
+                { name: '小吃店 雞肉飯(小碗)', cal: 385, protein: 18, carbs: 54, fat: 10, sugar: 2.5, satFat: 2.5, transFat: 0, sodium: 690 },
+                { name: '小吃店 控肉飯', cal: 690, protein: 26, carbs: 78, fat: 30, sugar: 6, satFat: 11, transFat: 0, sodium: 1240 },
+                { name: '小吃店 排骨飯便當', cal: 780, protein: 32, carbs: 92, fat: 31, sugar: 6, satFat: 9.5, transFat: 0, sodium: 1350 },
+                { name: '小吃店 雞腿飯便當(炸)', cal: 840, protein: 35, carbs: 94, fat: 36, sugar: 5, satFat: 10, transFat: 0, sodium: 1390 },
+                { name: '小吃店 陽春湯麵', cal: 360, protein: 11, carbs: 58, fat: 9, sugar: 2, satFat: 3, transFat: 0, sodium: 1120 },
+                { name: '小吃店 陽春乾麵', cal: 430, protein: 12, carbs: 64, fat: 14, sugar: 3, satFat: 4.5, transFat: 0, sodium: 960 },
+                { name: '小吃店 麻醬麵', cal: 520, protein: 15, carbs: 66, fat: 22, sugar: 3.5, satFat: 4, transFat: 0, sodium: 1040 },
+                { name: '小吃店 紅燒牛肉麵', cal: 640, protein: 34, carbs: 76, fat: 22, sugar: 5, satFat: 8.5, transFat: 0.3, sodium: 1680 },
+                { name: '小吃店 餛飩湯麵', cal: 460, protein: 18, carbs: 65, fat: 14, sugar: 2.5, satFat: 4.5, transFat: 0, sodium: 1280 },
+                { name: '小吃店 炒米粉', cal: 450, protein: 11, carbs: 68, fat: 15, sugar: 3, satFat: 4, transFat: 0, sodium: 980 },
+                { name: '小吃店 肉羹麵/米粉', cal: 490, protein: 19, carbs: 74, fat: 13, sugar: 6, satFat: 4, transFat: 0, sodium: 1320 },
+                { name: '小吃店 蚵仔煎', cal: 515, protein: 16, carbs: 58, fat: 24, sugar: 9, satFat: 5.5, transFat: 0, sodium: 1050 },
+                { name: '小吃店 肉圓(1顆)', cal: 440, protein: 11, carbs: 62, fat: 16, sugar: 8, satFat: 5, transFat: 0, sodium: 890 },
+                { name: '小吃店 炸臭豆腐(1份)', cal: 530, protein: 22, carbs: 36, fat: 33, sugar: 6, satFat: 7, transFat: 0, sodium: 1120 },
+                { name: '小吃店 大腸麵線(大碗)', cal: 415, protein: 14, carbs: 62, fat: 12, sugar: 4, satFat: 4.5, transFat: 0, sodium: 1290 },
+                { name: '小吃店 貢丸湯(2顆)', cal: 165, protein: 8, carbs: 6, fat: 12, sugar: 1, satFat: 4.5, transFat: 0, sodium: 680 },
+                { name: '小吃店 魚丸湯(3顆)', cal: 130, protein: 9, carbs: 10, fat: 6, sugar: 1.5, satFat: 2, transFat: 0, sodium: 650 },
+                { name: '小吃店 豬血湯', cal: 110, protein: 10, carbs: 3, fat: 6.5, sugar: 0.5, satFat: 2.5, transFat: 0, sodium: 740 },
+                { name: '小吃店 滷蛋(1顆)', cal: 85, protein: 7, carbs: 2, fat: 5.5, sugar: 1, satFat: 1.6, transFat: 0, sodium: 260 },
+                { name: '小吃店 油豆腐(2塊)', cal: 140, protein: 9, carbs: 4, fat: 10, sugar: 1, satFat: 2.2, transFat: 0, sodium: 340 },
+                { name: '小吃店 燙青菜(淋肉燥)', cal: 115, protein: 3.5, carbs: 9, fat: 7, sugar: 2, satFat: 2.5, transFat: 0, sodium: 480 }
+            ]
+        };
+        let activeQuickPresetTab = 'chain';
+        let activeChainBrand = '麥當勞';
+        let activeNoodleBrand = '統一';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStateFromStorage();
+            checkDailyReset();
+            calculateTargets();
+            syncProfileForm();
+            initWeightDateInput();
+            renderDashboard();
+            renderLogs();
+            renderWeightLogs();
+            renderCustomPresets();
+            renderQuickPresets();
+            renderPetSection();
+            renderAchievements();
+
+            // 預設開啟個人檔案分頁
+            switchTab('profile');
+        });
+
+        // 檢查是否已完整填寫個人資料
+        function isProfileComplete() {
+            const { gender, age, weight, height, activity, goal } = state.profile || {};
+            return Boolean(gender && age && weight && height && activity && goal);
+        }
+
+        // 若未輸入個人資料，阻止開始記錄並引導至個人檔案
+        function guardRecordingByProfile() {
+            if (!isProfileComplete()) {
+                showNotification('⚠️ 尚未輸入完整個人資料，無法開始記錄！請先填寫並儲存「個人檔案」。', 'bg-rose-50 text-rose-800 border-rose-200 font-bold');
+                switchTab('profile');
+                return false;
+            }
+            return true;
+        }
+
+        // 0:00 跨日檢查與結算
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            if (state.game.lastActiveDate !== today) {
+                if (state.game.lastActiveDate) {
+                    const hasYesterdayRecords = (state.logs && state.logs.length > 0) || (state.waterConsumed && state.waterConsumed > 0);
+
+                    if (hasYesterdayRecords) {
+                        const yesterdayTotals = state.logs.reduce((acc, item) => {
+                            acc.cal += item.cal || 0;
+                            acc.protein += item.protein || 0;
+                            acc.carbs += item.carbs || 0;
+                            acc.fat += item.fat || 0;
+                            acc.sugar += item.sugar || 0;
+                            acc.satFat += item.satFat || 0;
+                            acc.transFat += item.transFat || 0;
+                            acc.sodium += item.sodium || 0;
+                            return acc;
+                        }, { cal: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, satFat: 0, transFat: 0, sodium: 0 });
+
+                        if (state.logs.length > 0 && yesterdayTotals.sodium <= 2300) {
+                            addXP(25, '昨日控鈉達標');
+                            addCoins(15);
+                            unlockAchievement('low_sodium');
+                            showNotification('✨ 昨日鈉攝取成功控制未超標！獎勵 +25 XP 與 15 金幣！', 'bg-amber-400 text-amber-950 font-bold');
+                        }
+                        // 隔天結算其餘營養目標成就（除了「健康第一步」以外皆在此結算）
+                        checkAllGoalsAchievement(yesterdayTotals, state.waterConsumed);
+                    }
+
+                    state.logs = [];
+                    state.waterConsumed = 0;
+                }
+                state.game.lastActiveDate = today;
+                state.game.clickCount = 0;
+                saveStateToStorage();
+            }
+        }
+
+        function closeSpeechBubble() {
+            const bubble = document.getElementById('mascot-speech-bubble');
+            if (bubble) {
+                bubble.classList.add('hidden');
+            }
+        }
+
+        function switchTab(tabId) {
+            ['dashboard', 'profile', 'tracker', 'pet', 'achievements', 'guide'].forEach(id => {
+                const el = document.getElementById('tab-' + id);
+                const btn = document.getElementById('btn-' + id);
+                if (el) el.classList.add('hidden');
+                if (btn) btn.classList.remove('bg-amber-100', 'text-amber-900');
+            });
+            document.getElementById('tab-' + tabId)?.classList.remove('hidden');
+            document.getElementById('btn-' + tabId)?.classList.add('bg-amber-100', 'text-amber-900');
+        }
+
+        function saveStateToStorage() {
+            const storageKey = currentUser === 'guest' ? 'nutri_app_state' : `nutri_app_state_${currentUser}`;
+            localStorage.setItem(storageKey, JSON.stringify(state));
+            localStorage.setItem('nutri_app_current_user', currentUser);
+        }
+
+        function loadStateFromStorage() {
+            const storageKey = currentUser === 'guest' ? 'nutri_app_state' : `nutri_app_state_${currentUser}`;
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+                const loaded = JSON.parse(saved);
+                const mergedProfile = { ...state.profile, ...(loaded.profile || {}) };
+                const hasProfileData = Boolean(
+                    mergedProfile.gender &&
+                    mergedProfile.age &&
+                    mergedProfile.weight &&
+                    mergedProfile.height &&
+                    mergedProfile.activity &&
+                    mergedProfile.goal
+                );
+                state = { 
+                    ...state, 
+                    ...loaded,
+                    profile: mergedProfile,
+                    hasInitializedProfile: typeof loaded.hasInitializedProfile === 'boolean' ? loaded.hasInitializedProfile : hasProfileData,
+                    weightLogs: loaded.weightLogs || [],
+                    targets: { ...state.targets, ...(loaded.targets || {}) }
+                };
+            }
+        }
+
+        function syncProfileForm() {
+            document.getElementById('gender').value = state.profile.gender || '';
+            document.getElementById('age').value = state.profile.age || '';
+            document.getElementById('weight').value = state.profile.weight || '';
+            document.getElementById('height').value = state.profile.height || '';
+            document.getElementById('activity').value = state.profile.activity || '';
+            document.getElementById('goal').value = state.profile.goal || '';
+        }
+
+        function initWeightDateInput() {
+            const dateInput = document.getElementById('daily-weight-date');
+            if (dateInput) {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const todayStr = `${yyyy}-${mm}-${dd}`;
+                dateInput.max = todayStr;
+                if (!dateInput.value) {
+                    dateInput.value = todayStr;
+                }
+            }
+        }
+
+        function calculateTargets() {
+            const { gender, age, weight, height, activity, goal } = state.profile;
+            const feedbackEl = document.getElementById('ai-feedback');
+            if (!gender || !age || !weight || !height || !activity || !goal) {
+                if (feedbackEl) {
+                    feedbackEl.innerText = '請至「個人檔案」填寫您的資料，系統將為您生成專屬的每日營養充足度評估報告。';
+                }
+                return;
+            }
+
+            let bmr = (10 * weight) + (6.25 * height) - (5 * age) + (gender === 'male' ? 5 : -161);
+            let tdee = bmr * parseFloat(activity);
+            if (goal === 'lose') tdee -= 500;
+            if (goal === 'gain') tdee += 300;
+
+            const targetCal = Math.max(1200, Math.round(tdee));
+            state.targets.calories = targetCal;
+            state.targets.protein = Math.round(weight * 1.8);
+            state.targets.carbs = Math.round((targetCal * 0.5) / 4);
+            state.targets.fat = Math.round((targetCal * 0.25) / 9);
+            state.targets.sugar = Math.round((targetCal * 0.1) / 4);
+            state.targets.satFat = Math.round((targetCal * 0.1) / 9);
+            state.targets.transFat = parseFloat(((targetCal * 0.01) / 9).toFixed(1));
+            state.targets.water = Math.round(weight * 35);
+
+            if (feedbackEl) {
+                const goalText = goal === 'lose' ? '減脂瘦身' : (goal === 'gain' ? '增肌' : '維持體態');
+                feedbackEl.innerHTML = `根據您的身體數據，基礎代謝率 (BMR) 約為 <strong>${Math.round(bmr)} kcal</strong>。針對您的「<strong>${goalText}</strong>」目標，建議每日攝取 <strong>${targetCal} kcal</strong> 與 <strong>${state.targets.protein} g</strong> 蛋白質，並記得補充 <strong>${state.targets.water} ml</strong> 水分！`;
+            }
+
+            saveStateToStorage();
+        }
+
+        function saveProfile(e) {
+            e.preventDefault();
+            const gender = document.getElementById('gender').value;
+            const age = parseInt(document.getElementById('age').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const activity = document.getElementById('activity').value;
+            const goal = document.getElementById('goal').value;
+
+            if (!gender || !age || !weight || !height || !activity || !goal) {
+                showNotification('⚠️ 請完整填寫所有個人資料欄位後再存檔！', 'bg-rose-50 text-rose-800 border-rose-200 font-bold');
+                return;
+            }
+
+            const isFirstTimeInput = !state.hasInitializedProfile;
+
+            state.profile = { gender, age, weight, height, activity: parseFloat(activity), goal };
+            state.hasInitializedProfile = true;
+
+            // 首次輸入個人資料後一切歸零；之後更改個人資料不受其影響
+            if (isFirstTimeInput) {
+                state.logs = [];
+                state.weightLogs = [];
+                state.customPresets = [];
+                state.waterConsumed = 0;
+                state.selectedPetType = 'cat';
+                state.game = {
+                    level: 1,
+                    xp: 0,
+                    coins: 50,
+                    streak: 1,
+                    lastActiveDate: new Date().toDateString(),
+                    lastClickDate: null,
+                    clickCount: 0,
+                    unlockedAchievements: []
+                };
+            }
+
+            calculateTargets();
+            renderDashboard();
+            renderLogs();
+            renderWeightLogs();
+            renderCustomPresets();
+            renderPetSection();
+            renderAchievements();
+            switchTab('dashboard');
+
+            if (isFirstTimeInput) {
+                showNotification('✅ 個人資料已建立，各項紀錄與進度已歸零並計算專屬目標！', 'bg-emerald-50 text-emerald-800');
+            } else {
+                showNotification('✅ 個人資料已更新，既有紀錄與進度皆已完整保留！', 'bg-emerald-50 text-emerald-800');
+            }
+        }
+
+        function addCustomFood(e) {
+            e.preventDefault();
+            if (!guardRecordingByProfile()) return;
+
+            const name = document.getElementById('food-name').value.trim();
+            if (!name) return;
+
+            const servingsInput = parseFloat(document.getElementById('food-servings').value);
+            const servings = (!isNaN(servingsInput) && servingsInput > 0) ? servingsInput : 1;
+
+            const baseCal = parseFloat(document.getElementById('food-cal').value) || 0;
+            const baseProtein = parseFloat(document.getElementById('food-protein').value) || 0;
+            const baseCarbs = parseFloat(document.getElementById('food-carbs').value) || 0;
+            const baseFat = parseFloat(document.getElementById('food-fat').value) || 0;
+            const baseSugar = parseFloat(document.getElementById('food-sugar').value) || 0;
+            const baseSatFat = parseFloat(document.getElementById('food-satfat').value) || 0;
+            const baseTransFat = parseFloat(document.getElementById('food-transfat').value) || 0;
+            const baseSodium = parseFloat(document.getElementById('food-sodium').value) || 0;
+
+            const round1 = val => Math.round(val * servings * 10) / 10;
+            const cal = round1(baseCal);
+            const protein = round1(baseProtein);
+            const carbs = round1(baseCarbs);
+            const fat = round1(baseFat);
+            const sugar = round1(baseSugar);
+            const satFat = round1(baseSatFat);
+            const transFat = round1(baseTransFat);
+            const sodium = round1(baseSodium);
+
+            const displayName = servings !== 1 ? `${name} (${servings}份)` : name;
+            const itemData = {
+                id: Date.now(),
+                name: displayName,
+                cal,
+                protein,
+                carbs,
+                fat,
+                sugar,
+                satFat,
+                transFat,
+                sodium,
+                rewardXP: FOOD_LOG_REWARD_XP,
+                rewardCoins: FOOD_LOG_REWARD_COINS
+            };
+            state.logs.push(itemData);
+
+            if (document.getElementById('save-as-preset').checked) {
+                state.customPresets.push({ name, cal: baseCal, protein: baseProtein, carbs: baseCarbs, fat: baseFat, sugar: baseSugar, satFat: baseSatFat, transFat: baseTransFat, sodium: baseSodium });
+                renderCustomPresets();
+            }
+
+            document.getElementById('custom-food-form').reset();
+            document.getElementById('food-servings').value = '1';
+            addXP(FOOD_LOG_REWARD_XP, '記錄飲食');
+            addCoins(FOOD_LOG_REWARD_COINS);
+            unlockAchievement('first_log');
+            saveStateToStorage();
+            renderDashboard();
+            renderLogs();
+            showNotification(`🍽️ 已新增飲食紀錄：${displayName} (+${FOOD_LOG_REWARD_XP} XP, +${FOOD_LOG_REWARD_COINS} 金幣)`, 'bg-emerald-50 text-emerald-800');
+        }
+
+        function addWater(amount) {
+            if (!guardRecordingByProfile()) return;
+
+            state.waterConsumed += amount;
+            addXP(5, '補水');
+            saveStateToStorage();
+            renderDashboard();
+        }
+
+        function addCustomWater() {
+            if (!guardRecordingByProfile()) return;
+
+            const input = document.getElementById('water-custom-input');
+            const val = parseInt(input.value) || 0;
+            if (val > 0) {
+                addWater(val);
+                input.value = '';
+            }
+        }
+
+        function openEditWaterModal() {
+            if (!guardRecordingByProfile()) return;
+
+            const input = document.getElementById('edit-water-input');
+            if (input) input.value = state.waterConsumed || 0;
+            document.getElementById('edit-water-modal')?.classList.remove('hidden');
+        }
+
+        function closeEditWaterModal() {
+            document.getElementById('edit-water-modal')?.classList.add('hidden');
+        }
+
+        function adjustEditWater(delta) {
+            const input = document.getElementById('edit-water-input');
+            if (!input) return;
+            const current = parseInt(input.value) || 0;
+            input.value = Math.max(0, current + delta);
+        }
+
+        function saveEditWater(e) {
+            e.preventDefault();
+            if (!guardRecordingByProfile()) return;
+
+            const val = parseInt(document.getElementById('edit-water-input').value);
+            if (isNaN(val) || val < 0) return;
+            state.waterConsumed = val;
+            saveStateToStorage();
+            renderDashboard();
+            closeEditWaterModal();
+            showNotification(`💧 已將今日飲水量修改為 ${val} ml！`, 'bg-sky-50 text-sky-800 border-sky-200');
+        }
+
+        function clickMascot() {
+            if (!guardRecordingByProfile()) return;
+
+            if (state.game.clickCount >= 5) {
+                showNotification('🐾 今日互動上限（5次）已達！明日會自動歸零喔！', 'bg-amber-100 text-amber-900');
+                return;
+            }
+            state.game.clickCount += 1;
+            addXP(2, '寵物互動');
+            saveStateToStorage();
+            renderDashboard();
+        }
+
+        function buyAndFeed(id) {
+            if (!guardRecordingByProfile()) return;
+
+            const feed = FEEDS.find(f => f.id === id);
+            if (!feed) return;
+            if (state.game.coins < feed.cost) {
+                showNotification('🪙 金幣不足！', 'bg-rose-50 text-rose-800');
+                return;
+            }
+            state.game.coins -= feed.cost;
+            addXP(feed.xp, '餵食');
+            saveStateToStorage();
+            renderPetSection();
+            renderDashboard();
+            showNotification(`🍖 已餵食【${feed.name}】，獲得 +${feed.xp} XP！`, 'bg-amber-100 text-amber-950 font-bold');
+        }
+
+        function addXP(amount) {
+            state.game.xp += amount;
+            while (state.game.xp >= state.game.level * 100) {
+                state.game.xp -= state.game.level * 100;
+                state.game.level += 1;
+                showNotification(`🎉 寵物升級到了 Lv.${state.game.level}！`, 'bg-amber-400 text-amber-950 font-bold');
+            }
+            renderPetSection();
+        }
+
+        // 收回經驗值（支援跨等級降級處理，最低為 Lv.1 / 0 XP）
+        function deductXP(amount) {
+            if (!amount || amount <= 0) return;
+            state.game.xp -= amount;
+            while (state.game.xp < 0) {
+                if (state.game.level > 1) {
+                    state.game.level -= 1;
+                    state.game.xp += state.game.level * 100;
+                } else {
+                    state.game.xp = 0;
+                    break;
+                }
+            }
+            renderPetSection();
+        }
+
+        function addCoins(amount) {
+            state.game.coins += amount;
+        }
+
+        // 收回金幣（最低為 0）
+        function deductCoins(amount) {
+            if (!amount || amount <= 0) return;
+            state.game.coins = Math.max(0, state.game.coins - amount);
+        }
+
+        function unlockAchievement(id) {
+            if (!state.game.unlockedAchievements.includes(id)) {
+                state.game.unlockedAchievements.push(id);
+                renderAchievements();
+                const ach = ACHIEVEMENTS.find(a => a.id === id);
+                if (ach) {
+                    if (ach.rewardXP) addXP(ach.rewardXP);
+                    if (ach.rewardCoins) addCoins(ach.rewardCoins);
+                    saveStateToStorage();
+                    renderDashboard();
+                    renderPetSection();
+                    showNotification(`🏆 恭喜解鎖成就【${ach.title}】！獲得 +${ach.rewardXP} XP 與 🪙 +${ach.rewardCoins} 金幣！`, 'bg-amber-400 text-amber-950 font-bold');
+                }
+            }
+        }
+
+        function checkAllGoalsAchievement(totals, waterAmount = state.waterConsumed) {
+            if ((!state.logs || state.logs.length === 0) && (!waterAmount || waterAmount <= 0)) return;
+            // 檢查是否熱量、蛋白質、碳水、脂肪、水分均達到至少 80%
+            const calOk = totals.cal >= state.targets.calories * 0.8 && totals.cal <= state.targets.calories * 1.1;
+            const pOk = totals.protein >= state.targets.protein * 0.8;
+            const cOk = totals.carbs >= state.targets.carbs * 0.8;
+            const fOk = totals.fat >= state.targets.fat * 0.8;
+            const wOk = waterAmount >= state.targets.water;
+
+            // 檢查限制型成分是否皆未超過上限
+            const sugarOk = totals.sugar <= state.targets.sugar;
+            const satFatOk = totals.satFat <= state.targets.satFat;
+            const transFatOk = totals.transFat <= state.targets.transFat;
+            const sodiumOk = totals.sodium <= state.targets.sodium;
+
+            // 各個項目單獨解鎖判定
+            if (calOk) unlockAchievement('goal_cal');
+            if (pOk) unlockAchievement('goal_protein');
+            if (cOk) unlockAchievement('goal_carbs');
+            if (fOk) unlockAchievement('goal_fat');
+            if (wOk) unlockAchievement('goal_water');
+            if (sugarOk && totals.sugar >= 0) unlockAchievement('goal_sugar');
+            if (satFatOk && totals.satFat >= 0) unlockAchievement('goal_satfat');
+            if (transFatOk && totals.transFat >= 0) unlockAchievement('goal_transfat');
+
+            if (calOk && pOk && cOk && fOk && wOk && sugarOk && satFatOk && transFatOk && sodiumOk) {
+                unlockAchievement('all_goals_met');
+            }
+        }
+
+        function selectPet(key) {
+            if (!guardRecordingByProfile()) return;
+
+            if (!PET_TYPES[key]) return;
+            if (state.selectedPetType === key) return;
+
+            pendingPetKey = key;
+            document.getElementById('modal-pet-emoji').innerText = PET_TYPES[key].emoji;
+            document.getElementById('modal-pet-name').innerText = PET_TYPES[key].name;
+            document.getElementById('pet-modal').classList.remove('hidden');
+        }
+
+        function closePetModal() {
+            pendingPetKey = null;
+            document.getElementById('pet-modal').classList.add('hidden');
+        }
+
+        function confirmSelectPet() {
+            if (!pendingPetKey || !PET_TYPES[pendingPetKey]) return;
+
+            const petName = PET_TYPES[pendingPetKey].name;
+            state.selectedPetType = pendingPetKey;
+            
+            // 重置寵物等級與經驗值
+            state.game.level = 1;
+            state.game.xp = 0;
+            
+            saveStateToStorage();
+            renderDashboard();
+            renderPetSection();
+            
+            closePetModal();
+            showNotification(`🐾 已成功更換寵物為【${petName}】，等級與經驗值已重置為 Lv.1 (0 XP)！`, 'bg-amber-400 text-amber-950 font-bold');
+        }
+
+        function updateProgressBar(barId, pctId, msgId, current, target, unit, overflowWarning = false) {
+            const pct = target > 0 ? Math.round((current / target) * 100) : 0;
+            const bar = document.getElementById(barId);
+            const pctEl = document.getElementById(pctId);
+            const msgEl = document.getElementById(msgId);
+
+            if (bar) bar.style.width = `${Math.min(100, pct)}%`;
+            if (pctEl) {
+                pctEl.innerText = `${pct}%`;
+                if (overflowWarning && pct > 100) {
+                    pctEl.className = 'text-xs font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-700';
+                }
+            }
+            if (msgEl && overflowWarning && pct > 100) {
+                msgEl.innerHTML = `<span class="text-rose-500 font-bold">⚠️ 已超過建議每日攝取上限！</span>`;
+            }
+        }
+
+        function renderDashboard() {
+            const totals = state.logs.reduce((acc, l) => {
+                acc.cal += l.cal || 0;
+                acc.protein += l.protein || 0;
+                acc.carbs += l.carbs || 0;
+                acc.fat += l.fat || 0;
+                acc.sugar += l.sugar || 0;
+                acc.satFat += l.satFat || 0;
+                acc.transFat += l.transFat || 0;
+                acc.sodium += l.sodium || 0;
+                return acc;
+            }, { cal: 0, protein: 0, carbs: 0, fat: 0, sugar: 0, satFat: 0, transFat: 0, sodium: 0 });
+
+            // 數值顯示與修飾 (取小數點1位)
+            const formatNum = n => Number.isInteger(n) ? n : n.toFixed(1);
+
+            document.getElementById('stat-target-cal').innerText = state.targets.calories;
+            document.getElementById('stat-consumed-cal').innerText = formatNum(totals.cal);
+            
+            // 熱量
+            document.getElementById('val-consumed-cal').innerText = formatNum(totals.cal);
+            document.getElementById('val-target-cal').innerText = state.targets.calories;
+            updateProgressBar('bar-cal', 'pct-cal', 'msg-cal', totals.cal, state.targets.calories, 'kcal');
+
+            // 蛋白質
+            document.getElementById('val-consumed-protein').innerText = formatNum(totals.protein);
+            document.getElementById('val-target-protein').innerText = state.targets.protein;
+            updateProgressBar('bar-protein', 'pct-protein', 'msg-protein', totals.protein, state.targets.protein, 'g');
+
+            // 碳水
+            document.getElementById('val-consumed-carbs').innerText = formatNum(totals.carbs);
+            document.getElementById('val-target-carbs').innerText = state.targets.carbs;
+            updateProgressBar('bar-carbs', 'pct-carbs', 'msg-carbs', totals.carbs, state.targets.carbs, 'g');
+
+            // 脂肪
+            document.getElementById('val-consumed-fat').innerText = formatNum(totals.fat);
+            document.getElementById('val-target-fat').innerText = state.targets.fat;
+            updateProgressBar('bar-fat', 'pct-fat', 'msg-fat', totals.fat, state.targets.fat, 'g');
+
+            // 精緻糖
+            document.getElementById('val-consumed-sugar').innerText = formatNum(totals.sugar);
+            document.getElementById('val-target-sugar').innerText = state.targets.sugar;
+            updateProgressBar('bar-sugar', 'pct-sugar', 'msg-sugar', totals.sugar, state.targets.sugar, 'g', true);
+
+            // 飽和脂肪
+            document.getElementById('val-consumed-satfat').innerText = formatNum(totals.satFat);
+            document.getElementById('val-target-satfat').innerText = state.targets.satFat;
+            updateProgressBar('bar-satfat', 'pct-satfat', 'msg-satfat', totals.satFat, state.targets.satFat, 'g', true);
+
+            // 反式脂肪
+            document.getElementById('val-consumed-transfat').innerText = formatNum(totals.transFat);
+            document.getElementById('val-target-transfat').innerText = state.targets.transFat;
+            updateProgressBar('bar-transfat', 'pct-transfat', 'msg-transfat', totals.transFat, state.targets.transFat, 'g', true);
+
+            // 鈉與水
+            document.getElementById('val-consumed-sodium').innerText = formatNum(totals.sodium);
+            updateProgressBar('bar-sodium', 'pct-sodium', 'msg-sodium', totals.sodium, state.targets.sodium, 'mg', true);
+            
+            document.getElementById('val-consumed-water').innerText = state.waterConsumed;
+            document.getElementById('val-target-water').innerText = state.targets.water;
+            updateProgressBar('bar-water', 'pct-water', 'msg-water', state.waterConsumed, state.targets.water, 'ml');
+
+            document.getElementById('xp-bar').style.width = `${Math.min(100, (state.game.xp / (state.game.level * 100)) * 100)}%`;
+            document.getElementById('xp-text').innerText = `經驗值 XP: ${state.game.xp} / ${state.game.level * 100}`;
+            document.getElementById('mascot-click-count').innerText = `今日互動: ${state.game.clickCount}/5`;
+
+            const pet = PET_TYPES[state.selectedPetType] || PET_TYPES.cat;
+            document.getElementById('mascot-emoji').innerHTML = `<span class="text-5xl">${pet.emoji}</span>`;
+            document.getElementById('user-level-badge').innerText = `Lv.${state.game.level} ${pet.name}`;
+            document.getElementById('coin-badge').innerText = `🪙 ${state.game.coins} 金幣`;
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('log-list-container');
+            container.innerHTML = state.logs.map(log => `
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex justify-between items-center text-xs">
+                    <div>
+                        <span class="font-bold text-slate-800">${log.name}</span>
+                        <div class="text-[10px] text-slate-500">
+                            ${log.cal} kcal | 蛋白 ${log.protein||0}g | 碳水 ${log.carbs||0}g | 脂肪 ${log.fat||0}g
+                            ${log.sugar ? `| 糖 ${log.sugar}g` : ''} 
+                            ${log.satFat ? `| 飽和 ${log.satFat}g` : ''} 
+                            ${log.transFat ? `| 反式 ${log.transFat}g` : ''}
+                            ${log.sodium ? `| 鈉 ${log.sodium}mg` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 ml-2 whitespace-nowrap">
+                        <button onclick="openEditFoodModal(${log.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold px-2 py-1 rounded-lg transition-all">
+                            ✏️ 編輯
+                        </button>
+                        <button onclick="deleteFoodLog(${log.id})" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-bold px-2 py-1 rounded-lg transition-all">
+                            🗑️ 刪除
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('log-count').innerText = state.logs.length;
+            document.getElementById('log-total-cal').innerText = `${state.logs.reduce((sum, i) => sum + (i.cal||0), 0)} kcal`;
+        }
+
+        function deleteFoodLog(id) {
+            const targetLog = state.logs.find(l => l.id === id);
+            if (!targetLog) return;
+
+            const xpToDeduct = targetLog.rewardXP ?? FOOD_LOG_REWARD_XP;
+            const coinsToDeduct = targetLog.rewardCoins ?? FOOD_LOG_REWARD_COINS;
+
+            state.logs = state.logs.filter(l => l.id !== id);
+            deductXP(xpToDeduct);
+            deductCoins(coinsToDeduct);
+
+            saveStateToStorage();
+            renderDashboard();
+            renderLogs();
+            renderPetSection();
+            showNotification(`🗑️ 已刪除飲食紀錄並收回 -${xpToDeduct} XP 與 🪙 -${coinsToDeduct} 金幣！`, 'bg-rose-50 text-rose-800');
+        }
+
+        function openEditFoodModal(id) {
+            const item = state.logs.find(l => l.id === id);
+            if (!item) return;
+
+            document.getElementById('edit-food-id').value = item.id;
+            document.getElementById('edit-food-name').value = item.name;
+            document.getElementById('edit-food-cal').value = item.cal;
+            document.getElementById('edit-food-protein').value = item.protein;
+            document.getElementById('edit-food-carbs').value = item.carbs;
+            document.getElementById('edit-food-fat').value = item.fat;
+            document.getElementById('edit-food-sugar').value = item.sugar || 0;
+            document.getElementById('edit-food-satfat').value = item.satFat || 0;
+            document.getElementById('edit-food-transfat').value = item.transFat || 0;
+            document.getElementById('edit-food-sodium').value = item.sodium || 0;
+
+            document.getElementById('edit-food-modal').classList.remove('hidden');
+        }
+
+        function closeEditFoodModal() {
+            document.getElementById('edit-food-modal').classList.add('hidden');
+        }
+
+        function saveEditFood(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-food-id').value);
+            const index = state.logs.findIndex(l => l.id === id);
+            if (index === -1) return;
+
+            const existingItem = state.logs[index];
+            state.logs[index] = {
+                ...existingItem,
+                id,
+                name: document.getElementById('edit-food-name').value,
+                cal: parseFloat(document.getElementById('edit-food-cal').value) || 0,
+                protein: parseFloat(document.getElementById('edit-food-protein').value) || 0,
+                carbs: parseFloat(document.getElementById('edit-food-carbs').value) || 0,
+                fat: parseFloat(document.getElementById('edit-food-fat').value) || 0,
+                sugar: parseFloat(document.getElementById('edit-food-sugar').value) || 0,
+                satFat: parseFloat(document.getElementById('edit-food-satfat').value) || 0,
+                transFat: parseFloat(document.getElementById('edit-food-transfat').value) || 0,
+                sodium: parseFloat(document.getElementById('edit-food-sodium').value) || 0,
+            };
+
+            saveStateToStorage();
+            renderDashboard();
+            renderLogs();
+            closeEditFoodModal();
+            showNotification('✏️ 已成功更新飲食紀錄！', 'bg-emerald-50 text-emerald-800');
+        }
+
+        function addWeightLog(e) {
+            e.preventDefault();
+            if (!guardRecordingByProfile()) return;
+
+            const dateInput = document.getElementById('daily-weight-date');
+            const input = document.getElementById('daily-weight-input');
+            const weightVal = parseFloat(input.value);
+            if (!weightVal || weightVal <= 0) return;
+
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            let selectedDate = dateInput ? dateInput.value : '';
+            if (!selectedDate) {
+                selectedDate = todayStr;
+            }
+            if (selectedDate > todayStr) {
+                showNotification('⚠️ 無法選擇未來的日期記錄體重！', 'bg-rose-50 text-rose-800 border-rose-200 font-bold');
+                return;
+            }
+            const formattedDate = selectedDate.replace(/-/g, '/');
+
+            if (!state.weightLogs) state.weightLogs = [];
+
+            const existingIndex = state.weightLogs.findIndex(item => item.date === formattedDate);
+            if (existingIndex !== -1) {
+                state.weightLogs[existingIndex].weight = weightVal;
+            } else {
+                state.weightLogs.push({ id: Date.now(), date: formattedDate, weight: weightVal });
+                addXP(10, '記錄體重');
+                addCoins(5);
+            }
+
+            // 依照日期由新到舊排序
+            state.weightLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // 同步更新個人檔案體重數值為最新一筆體重並重新計算建議攝取目標
+            state.profile.weight = state.weightLogs[0].weight;
+            syncProfileForm();
+            calculateTargets();
+
+            input.value = '';
+            saveStateToStorage();
+            renderDashboard();
+            renderWeightLogs();
+            showNotification(`⚖️ 已記錄 ${formattedDate} 體重：${weightVal} kg！`, 'bg-emerald-50 text-emerald-800');
+        }
+
+        function deleteWeightLog(id) {
+            state.weightLogs = (state.weightLogs || []).filter(item => item.id !== id);
+            saveStateToStorage();
+            renderWeightLogs();
+            showNotification('🗑️ 已刪除該筆體重紀錄', 'bg-rose-50 text-rose-800');
+        }
+
+        function renderWeightLogs() {
+            const listEl = document.getElementById('weight-logs-list');
+            const diffBadge = document.getElementById('weight-diff-badge');
+            if (!listEl) return;
+
+            const logs = state.weightLogs || [];
+            if (logs.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">尚未有體重紀錄，快來記錄第一筆吧！</p>`;
+                if (diffBadge) diffBadge.innerText = '尚無比較數據';
+                return;
+            }
+
+            if (diffBadge) {
+                if (logs.length >= 2) {
+                    const diff = (logs[0].weight - logs[logs.length - 1].weight).toFixed(1);
+                    if (diff > 0) {
+                        diffBadge.innerHTML = `<span class="text-amber-700">累計變化: +${diff} kg</span>`;
+                    } else if (diff < 0) {
+                        diffBadge.innerHTML = `<span class="text-emerald-600">累計變化: ${diff} kg</span>`;
+                    } else {
+                        diffBadge.innerHTML = `<span class="text-slate-600">累計變化: 0.0 kg</span>`;
+                    }
+                } else {
+                    diffBadge.innerText = `最新: ${logs[0].weight} kg`;
+                }
+            }
+
+            listEl.innerHTML = logs.map((item, idx) => {
+                let changeTag = '';
+                if (idx < logs.length - 1) {
+                    const delta = (item.weight - logs[idx + 1].weight).toFixed(1);
+                    if (delta > 0) changeTag = `<span class="text-[10px] text-amber-600 ml-1">(+${delta})</span>`;
+                    else if (delta < 0) changeTag = `<span class="text-[10px] text-emerald-600 ml-1">(${delta})</span>`;
+                }
+                return `
+                    <div class="bg-white px-3 py-2 rounded-lg border border-slate-100 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="text-slate-400 text-[11px] mr-2">${item.date}</span>
+                            <strong class="text-slate-800">${item.weight} kg</strong>
+                            ${changeTag}
+                        </div>
+                        <button type="button" onclick="deleteWeightLog(${item.id})" class="text-rose-500 hover:text-rose-700 text-[11px] font-bold px-1.5 py-0.5 rounded hover:bg-rose-50 transition-all">
+                            刪除
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addPresetToLog(presetJson) {
+            if (!guardRecordingByProfile()) return;
+
+            const preset = JSON.parse(decodeURIComponent(presetJson));
+            state.logs.push({
+                ...preset,
+                id: Date.now(),
+                rewardXP: FOOD_LOG_REWARD_XP,
+                rewardCoins: FOOD_LOG_REWARD_COINS
+            });
+            addXP(FOOD_LOG_REWARD_XP);
+            addCoins(FOOD_LOG_REWARD_COINS);
+            unlockAchievement('first_log');
+            saveStateToStorage();
+            renderLogs();
+            renderDashboard();
+            showNotification(`🍽️ 已新增常用食物：${preset.name} (+${FOOD_LOG_REWARD_XP} XP, +${FOOD_LOG_REWARD_COINS} 金幣)`, 'bg-emerald-50 text-emerald-800');
+        }
+
+        function renderCustomPresets() {
+            const container = document.getElementById('custom-presets-list');
+            container.innerHTML = state.customPresets.map(p => {
+                const encoded = encodeURIComponent(JSON.stringify(p));
+                return `
+                    <div class="bg-amber-50 p-2 rounded-xl flex justify-between items-center text-xs">
+                        <span>${p.name}</span>
+                        <button onclick="addPresetToLog('${encoded}')" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded">＋新增</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchQuickPresetTab(tab) {
+            activeQuickPresetTab = tab;
+            const chainBtn = document.getElementById('quick-tab-chain');
+            const noodleBtn = document.getElementById('quick-tab-noodle');
+            const snackBtn = document.getElementById('quick-tab-snack');
+            const activeClass = 'flex-1 py-1.5 rounded-lg bg-white text-emerald-700 shadow-sm transition-all';
+            const inactiveClass = 'flex-1 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all';
+            if (chainBtn) chainBtn.className = tab === 'chain' ? activeClass : inactiveClass;
+            if (noodleBtn) noodleBtn.className = tab === 'noodle' ? activeClass : inactiveClass;
+            if (snackBtn) snackBtn.className = tab === 'snack' ? activeClass : inactiveClass;
+            renderQuickPresets();
+        }
+
+        function switchChainBrand(brand) {
+            activeChainBrand = brand;
+            renderQuickPresets();
+        }
+
+        function switchNoodleBrand(brand) {
+            activeNoodleBrand = brand;
+            renderQuickPresets();
+        }
+
+        function getQuickPresetItem(category, index, brand = null) {
+            if (category === 'chain') {
+                const targetBrand = brand || activeChainBrand;
+                return QUICK_FOOD_PRESETS.chain[targetBrand]?.[index];
+            }
+            if (category === 'noodle') {
+                const targetBrand = brand || activeNoodleBrand;
+                return QUICK_FOOD_PRESETS.noodle[targetBrand]?.[index];
+            }
+            return QUICK_FOOD_PRESETS[category]?.[index];
+        }
+
+        function addQuickFoodPreset(category, index, brand = null) {
+            if (!guardRecordingByProfile()) return;
+
+            const item = getQuickPresetItem(category, index, brand);
+            if (!item) return;
+
+            state.logs.push({
+                ...item,
+                id: Date.now(),
+                rewardXP: FOOD_LOG_REWARD_XP,
+                rewardCoins: FOOD_LOG_REWARD_COINS
+            });
+            addXP(FOOD_LOG_REWARD_XP, '記錄飲食');
+            addCoins(FOOD_LOG_REWARD_COINS);
+            unlockAchievement('first_log');
+            saveStateToStorage();
+            renderDashboard();
+            renderLogs();
+            showNotification(`⚡ 已透過快捷鍵新增：${item.name} (+${FOOD_LOG_REWARD_XP} XP, +${FOOD_LOG_REWARD_COINS} 金幣)`, 'bg-emerald-50 text-emerald-800');
+        }
+
+        function fillFormFromQuickPreset(category, index, brand = null) {
+            const item = getQuickPresetItem(category, index, brand);
+            if (!item) return;
+
+            document.getElementById('food-name').value = item.name;
+            document.getElementById('food-cal').value = item.cal;
+            document.getElementById('food-protein').value = item.protein;
+            document.getElementById('food-carbs').value = item.carbs;
+            document.getElementById('food-fat').value = item.fat;
+            document.getElementById('food-sugar').value = item.sugar || 0;
+            document.getElementById('food-satfat').value = item.satFat || 0;
+            document.getElementById('food-transfat').value = item.transFat || 0;
+            document.getElementById('food-sodium').value = item.sodium || 0;
+            document.getElementById('food-servings').value = '1';
+            showNotification(`📝 已將「${item.name}」填入上方表單，可調整份數後送出！`, 'bg-amber-50 text-amber-900');
+        }
+
+        function renderQuickPresets() {
+            const container = document.getElementById('quick-presets-list');
+            const subtabsContainer = document.getElementById('quick-chain-subtabs');
+            if (!container) return;
+
+            let list = [];
+            let currentBrand = '';
+            if (activeQuickPresetTab === 'chain') {
+                const brands = Object.keys(QUICK_FOOD_PRESETS.chain);
+                if (!brands.includes(activeChainBrand)) {
+                    activeChainBrand = brands[0];
+                }
+                currentBrand = activeChainBrand;
+                if (subtabsContainer) {
+                    subtabsContainer.classList.remove('hidden');
+                    subtabsContainer.innerHTML = brands.map(brand => `
+                        <button type="button" onclick="switchChainBrand('${brand}')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${activeChainBrand === brand ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+                            ${brand}
+                        </button>
+                    `).join('');
+                }
+                list = QUICK_FOOD_PRESETS.chain[activeChainBrand] || [];
+            } else if (activeQuickPresetTab === 'noodle') {
+                const brands = Object.keys(QUICK_FOOD_PRESETS.noodle);
+                if (!brands.includes(activeNoodleBrand)) {
+                    activeNoodleBrand = brands[0];
+                }
+                currentBrand = activeNoodleBrand;
+                if (subtabsContainer) {
+                    subtabsContainer.classList.remove('hidden');
+                    subtabsContainer.innerHTML = brands.map(brand => `
+                        <button type="button" onclick="switchNoodleBrand('${brand}')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${activeNoodleBrand === brand ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+                            ${brand}
+                        </button>
+                    `).join('');
+                }
+                list = QUICK_FOOD_PRESETS.noodle[activeNoodleBrand] || [];
+            } else {
+                if (subtabsContainer) {
+                    subtabsContainer.classList.add('hidden');
+                    subtabsContainer.innerHTML = '';
+                }
+                list = QUICK_FOOD_PRESETS[activeQuickPresetTab] || [];
+            }
+
+            container.innerHTML = list.map((p, idx) => `
+                <div class="bg-slate-50 hover:bg-emerald-50/60 p-2.5 rounded-xl border border-slate-100 flex justify-between items-center text-xs transition-all">
+                    <div class="pr-2">
+                        <span class="font-bold text-slate-800 block">${p.name}</span>
+                        <span class="text-[10px] text-slate-500">${p.cal} kcal | 蛋白 ${p.protein}g | 碳水 ${p.carbs}g | 鈉 ${p.sodium}mg</span>
+                    </div>
+                    <div class="flex items-center gap-1 whitespace-nowrap">
+                        <button type="button" onclick="fillFormFromQuickPreset('${activeQuickPresetTab}', ${idx}, '${currentBrand}')" title="帶入表單調整份數" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold px-2 py-1 rounded-lg transition-all">帶入</button>
+                        <button type="button" onclick="addQuickFoodPreset('${activeQuickPresetTab}', ${idx}, '${currentBrand}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2 py-1 rounded-lg transition-all">＋新增</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPetSection() {
+            const grid = document.getElementById('pet-selector-grid');
+            grid.innerHTML = Object.keys(PET_TYPES).map(key => `
+                <div onclick="selectPet('${key}')" class="p-2 border rounded-xl text-center cursor-pointer ${state.selectedPetType === key ? 'border-amber-500 bg-amber-50' : ''}">
+                    <span class="text-2xl">${PET_TYPES[key].emoji}</span>
+                    <span class="text-xs font-bold block">${PET_TYPES[key].name}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('pet-room-emoji').innerHTML = `<span class="text-6xl">${PET_TYPES[state.selectedPetType].emoji}</span>`;
+            const currentPet = PET_TYPES[state.selectedPetType] || PET_TYPES.cat;
+            const petRoomLevelTag = document.getElementById('pet-room-level-tag');
+            if (petRoomLevelTag) {
+                petRoomLevelTag.innerText = `Lv.${state.game.level} ${currentPet.name}`;
+            }
+            document.getElementById('pet-room-coins').innerText = `🪙 ${state.game.coins} 金幣`;
+
+            const shop = document.getElementById('feed-shop-list');
+            shop.innerHTML = FEEDS.map(f => `
+                <div class="p-3 border rounded-xl flex justify-between items-center">
+                    <div>
+                        <span class="font-bold text-xs">${f.icon} ${f.name}</span>
+                        <span class="text-[10px] text-slate-500 block">＋${f.xp} XP</span>
+                    </div>
+                    <button onclick="buyAndFeed('${f.id}')" class="bg-amber-400 text-amber-950 font-bold text-xs px-3 py-1 rounded">🪙 ${f.cost}</button>
+                </div>
+            `).join('');
+        }
+
+        function renderAchievements() {
+            const grid = document.getElementById('achievements-grid');
+            grid.innerHTML = ACHIEVEMENTS.map(a => `
+                <div class="p-3 border rounded-xl ${state.game.unlockedAchievements.includes(a.id) ? 'bg-amber-50 border-amber-300' : 'opacity-40'}">
+                    <span class="text-2xl">${a.icon}</span>
+                    <h4 class="font-bold text-xs mt-1">${a.title}</h4>
+                    <p class="text-[10px] text-slate-500">${a.desc}</p>
+                    <div class="mt-2 text-[10px] font-bold text-amber-800 bg-amber-100/60 px-2 py-0.5 rounded inline-block">
+                        獎勵: +${a.rewardXP} XP / 🪙${a.rewardCoins}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showNotification(msg, style) {
+            const el = document.getElementById('notification');
+            el.className = `mb-6 p-4 rounded-xl text-sm font-medium border ${style}`;
+            el.innerText = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 3500);
+        }
+    </script>
+</body>
+</html>
